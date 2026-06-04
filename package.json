@@ -1,0 +1,35 @@
+{
+  "name": "minnie-xp-bot",
+  "version": "1.0.0",
+  "description": "Production-ready Discord XP bot with admin dashboard",
+  "main": "src/index.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/index.js",
+    "bot": "node src/bot.js",
+    "api": "node src/api-server.js",
+    "deploy-commands": "node src/deploy-commands.js",
+    "dev": "concurrently \"npm run bot\" \"npm run api\"",
+    "dashboard:dev": "cd dashboard && npm run dev",
+    "dashboard:build": "cd dashboard && npm run build",
+    "install:all": "npm install && cd dashboard && npm install"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.7.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "discord.js": "^14.16.3",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "jsonwebtoken": "^9.0.2",
+    "node-cron": "^3.0.3",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

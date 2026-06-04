@@ -1,0 +1,72 @@
+import { useEffect, useState } from 'react';
+import Layout from '../../components/Layout';
+import { useDashboard } from '../../hooks/useDashboard';
+import { guildApi } from '../../lib/api';
+
+export default function XpConfigPage() {
+  const { guilds, guildId, setGuildId, loading, fetchGuild } = useDashboard();
+  const [settings, setSettings] = useState(null);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (!guildId) return;
+    fetchGuild('/settings').then(setSettings);
+  }, [guildId, fetchGuild]);
+
+  async function save(e) {
+    e.preventDefault();
+    const form = new FormData(e.target);
+    await guildApi(guildId, '/settings', {
+      method: 'PATCH',
+      body: JSON.stringify({
+        voice_xp_rate: parseFloat(form.get('voice_xp_rate')),
+        text_xp_min: parseInt(form.get('text_xp_min'), 10),
+        text_xp_max: parseInt(form.get('text_xp_max'), 10),
+        text_cooldown: parseInt(form.get('text_cooldown'), 10),
+        daily_xp_cap: parseInt(form.get('daily_xp_cap'), 10),
+        min_message_length: parseInt(form.get('min_message_length'), 10),
+        anti_spam_window: parseInt(form.get('anti_spam_window'), 10),
+        anti_spam_max_messages: parseInt(form.get('anti_spam_max_messages'), 10),
+        max_level: parseInt(form.get('max_level'), 10),
+      }),
+    });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+    fetchGuild('/settings').then(setSettings);
+  }
+
+  if (loading) return <div className="p-8">Loading...</div>;
+
+  return (
+    <Layout guildId={guildId} guilds={guilds} onGuildChange={setGuildId}>
+      <h2 className="text-2xl font-bold mb-6">XP Configuration</h2>
+      {settings && (
+        <form onSubmit={save} className="max-w-lg space-y-4 bg-surface p-6 rounded-lg border border-gray-800">
+          <Field label="Voice XP / minute" name="voice_xp_rate" defaultValue={settings.voice_xp_rate} type="number" step="0.1" />
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Text XP Min" name="text_xp_min" defaultValue={settings.text_xp_min} type="number" />
+            <Field label="Text XP Max" name="text_xp_max" defaultValue={settings.text_xp_max} type="number" />
+          </div>
+          <Field label="Text Cooldown (sec)" name="text_cooldown" defaultValue={settings.text_cooldown} type="number" />
+          <Field label="Daily XP Cap" name="daily_xp_cap" defaultValue={settings.daily_xp_cap} type="number" />
+          <Field label="Min Message Length" name="min_message_length" defaultValue={settings.min_message_length} type="number" />
+          <Field label="Anti-Spam Window (sec)" name="anti_spam_window" defaultValue={settings.anti_spam_window} type="number" />
+          <Field label="Max Messages in Window" name="anti_spam_max_messages" defaultValue={settings.anti_spam_max_messages} type="number" />
+          <Field label="Max Level" name="max_level" defaultValue={settings.max_level} type="number" />
+          <button type="submit" className="bg-discord px-4 py-2 rounded font-medium">Save Settings</button>
+          {saved && <span className="text-green-400 ml-2">Saved!</span>}
+        </form>
+      )}
+    </Layout>
+  );
+}
+
+function Field({ label, name, defaultValue, type = 'text', step }) {
+  return (
+    <label className="block">
+      <span className="text-sm text-gray-400">{label}</span>
+      <input name={name} type={type} step={step} defaultValue={defaultValue}
+        className="mt-1 w-full bg-surface-light rounded px-3 py-2 border border-gray-700" />
+    </label>
+  );
+}
