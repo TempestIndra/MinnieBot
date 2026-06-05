@@ -144,6 +144,8 @@ schema.sql
 
 See **[docs/DEPLOY-PROXMOX.md](docs/DEPLOY-PROXMOX.md)** for a full guide (VM setup, systemd, Nginx, SSL, Discord OAuth in production). Service templates are in `deploy/`.
 
+**Subdomain without port forwarding:** **[docs/CLOUDFLARE-TUNNEL.md](docs/CLOUDFLARE-TUNNEL.md)**
+
 ## Production Notes
 
 - Set `NODE_ENV=production`, strong `SESSION_SECRET` / `JWT_SECRET`

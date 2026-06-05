@@ -177,21 +177,22 @@ Proxmox itself does not need 80/443 unless you proxy from the Proxmox host.
 
 **Option 2 — Cloudflare Tunnel (recommended if no static IP / no port forward)**
 
-On the Minnie VM:
+Full step-by-step: **[CLOUDFLARE-TUNNEL.md](CLOUDFLARE-TUNNEL.md)**
+
+Short version on the VM:
 
 ```bash
-# Install cloudflared — see https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/installation/
+sudo apt install -y cloudflared   # see CLOUDFLARE-TUNNEL.md for install commands
 sudo cloudflared tunnel login
 sudo cloudflared tunnel create minnie
+sudo cp /opt/minnie/deploy/cloudflared-config.yml /etc/cloudflared/config.yml
+# edit config.yml — set your subdomain
+sudo cloudflared tunnel route dns minnie minnie.yourdomain.com
+sudo cloudflared service install --config /etc/cloudflared/config.yml
+sudo systemctl start cloudflared
 ```
 
-In Cloudflare Zero Trust → **Public Hostname**:
-
-- Subdomain: `minnie`
-- Domain: `yourdomain.com`
-- Service: `http://localhost:3000`
-
-Skip router port forward; Cloudflare terminates HTTPS.
+Skip router port forward and Nginx; Cloudflare terminates HTTPS.
 
 ### Step D — App config (must match subdomain)
 

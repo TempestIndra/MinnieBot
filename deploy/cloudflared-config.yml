@@ -1,0 +1,19 @@
+# /etc/cloudflared/config.yml
+# Replace <TUNNEL-ID> and minnie.yourdomain.com before use.
+#
+# Install:
+#   sudo cloudflared tunnel create minnie
+#   sudo cp <credentials>.json /etc/cloudflared/credentials.json
+#   sudo cloudflared tunnel route dns minnie minnie.yourdomain.com
+#   sudo cloudflared service install --config /etc/cloudflared/config.yml
+
+tunnel: minnie
+credentials-file: /etc/cloudflared/credentials.json
+
+ingress:
+  - hostname: minnie.yourdomain.com
+    path: /socket.io/*
+    service: http://127.0.0.1:4000
+  - hostname: minnie.yourdomain.com
+    service: http://127.0.0.1:3000
+  - service: http_status:404
