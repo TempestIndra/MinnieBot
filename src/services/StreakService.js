@@ -1,6 +1,5 @@
 const UserRepository = require('../repositories/UserRepository');
 const { todayKey, yesterdayKey } = require('../utils/dates');
-const XpService = require('./XpService');
 const EconomyService = require('./EconomyService');
 
 class StreakService {
@@ -11,17 +10,15 @@ class StreakService {
 
     if (user.last_streak_date === today) return user;
 
-    let streak = 1;
-    if (user.last_streak_date === yesterday) {
-      streak = user.streak_count + 1;
-    }
+    const wasYesterday = user.last_streak_date === yesterday;
+    const streak = wasYesterday ? user.streak_count + 1 : 1;
 
     UserRepository.update(userId, guildId, { streak_count: streak, last_streak_date: today });
 
-    const bonusXp = Math.min(50, streak * 5);
-    const bonusCoins = Math.min(25, streak * 2);
-    if (streak > 1 && user.last_streak_date !== today) {
-      XpService.award(userId, guildId, { amount: bonusXp, source: 'streak', skipDailyCap: true });
+    if (streak > 1) {
+      const bonusXp = Math.min(50, streak * 5);
+      const bonusCoins = Math.min(25, streak * 2);
+      require('./XpService').award(userId, guildId, { amount: bonusXp, source: 'streak', skipDailyCap: true });
       EconomyService.addCoins(userId, guildId, bonusCoins, 'streak');
     }
 

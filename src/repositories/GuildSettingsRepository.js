@@ -30,6 +30,7 @@ class GuildSettingsRepository {
       'min_message_length', 'max_level', 'prestige_max', 'log_channel_id', 'level_up_channel_id',
       'prestige_role_id', 'coin_voice_rate', 'coin_text_rate', 'prestige_xp_multiplier',
       'prestige_coin_multiplier', 'anti_spam_window', 'anti_spam_max_messages', 'voice_afk_threshold_minutes',
+      'dashboard_url', 'dashboard_link_text', 'dashboard_embed_title', 'dashboard_embed_description',
     ];
     const sets = [];
     const values = [];

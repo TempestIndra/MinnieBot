@@ -91,10 +91,29 @@ class UserRepository {
     `).all(guildId, limit);
   }
 
-  search(guildId, query, limit = 20) {
+  listAll(guildId, limit = 50, offset = 0) {
     return getDatabase().prepare(`
-      SELECT * FROM users WHERE guild_id = ? AND username LIKE ? ORDER BY total_xp DESC LIMIT ?
-    `).all(guildId, `%${query}%`, limit);
+      SELECT * FROM users WHERE guild_id = ? ORDER BY total_xp DESC LIMIT ? OFFSET ?
+    `).all(guildId, limit, offset);
+  }
+
+  findById(guildId, userId) {
+    return getDatabase().prepare('SELECT * FROM users WHERE guild_id = ? AND user_id = ?').get(guildId, userId);
+  }
+
+  search(guildId, query, limit = 50) {
+    const q = (query || '').trim();
+    if (!q) return this.listAll(guildId, limit);
+
+    if (/^\d{17,20}$/.test(q)) {
+      const row = this.findById(guildId, q);
+      return row ? [row] : [];
+    }
+
+    return getDatabase().prepare(`
+      SELECT * FROM users WHERE guild_id = ? AND (username LIKE ? OR user_id LIKE ?)
+      ORDER BY total_xp DESC LIMIT ?
+    `).all(guildId, `%${q}%`, `%${q}%`, limit);
   }
 
   resetUser(userId, guildId) {

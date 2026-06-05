@@ -1,13 +1,32 @@
 const fs = require('fs');
 const path = require('path');
 const { getDatabase, getDbPath } = require('./connection');
+const logger = require('../utils/logger').child('db');
+
+const MIGRATIONS = [
+  'ALTER TABLE guild_settings ADD COLUMN dashboard_url TEXT',
+  'ALTER TABLE guild_settings ADD COLUMN dashboard_link_text TEXT',
+  'ALTER TABLE guild_settings ADD COLUMN dashboard_embed_title TEXT',
+  'ALTER TABLE guild_settings ADD COLUMN dashboard_embed_description TEXT',
+];
+
+function runMigrations(db) {
+  for (const sql of MIGRATIONS) {
+    try {
+      db.exec(sql);
+    } catch (err) {
+      if (!err.message.includes('duplicate column')) throw err;
+    }
+  }
+}
 
 function initializeDatabase() {
   const db = getDatabase();
   const schemaPath = path.join(__dirname, '../../schema.sql');
   const schema = fs.readFileSync(schemaPath, 'utf8');
   db.exec(schema);
-  console.log(`[DB] Initialized at ${getDbPath()}`);
+  runMigrations(db);
+  logger.info(`Initialized at ${getDbPath()}`);
   return db;
 }
 

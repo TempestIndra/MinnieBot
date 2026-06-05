@@ -7,6 +7,7 @@ function createRouter() {
   const router = express.Router();
 
   router.get('/auth/login', AuthController.getLoginUrl.bind(AuthController));
+  router.get('/auth/exchange', AuthController.exchange.bind(AuthController));
   router.get('/auth/callback', AuthController.callback.bind(AuthController));
   router.get('/auth/me', requireAuth, AuthController.me.bind(AuthController));
   router.post('/auth/logout', requireAuth, AuthController.logout.bind(AuthController));
@@ -36,7 +37,9 @@ function createRouter() {
   guild.delete('/shop', GuildController.removeShopRole.bind(GuildController));
   guild.get('/shop/purchases', GuildController.getShopPurchases.bind(GuildController));
   guild.get('/leaderboard', GuildController.getLeaderboard.bind(GuildController));
+  guild.get('/users', GuildController.listUsers.bind(GuildController));
   guild.get('/users/search', GuildController.searchUsers.bind(GuildController));
+  guild.post('/users/resolve', GuildController.resolveUser.bind(GuildController));
   guild.get('/users/:userId', GuildController.getUser.bind(GuildController));
   guild.post('/users/xp', GuildController.adjustXp.bind(GuildController));
   guild.post('/users/xp/reset', GuildController.resetXp.bind(GuildController));

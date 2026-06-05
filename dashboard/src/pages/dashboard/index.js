@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import Layout from '../../components/Layout';
+import NoBotServers from '../../components/NoBotServers';
 import { useDashboard } from '../../hooks/useDashboard';
 
 function StatCard({ label, value }) {
@@ -12,7 +13,7 @@ function StatCard({ label, value }) {
 }
 
 export default function OverviewPage() {
-  const { user, guilds, guildId, setGuildId, loading, fetchGuild } = useDashboard();
+  const { user, guilds, guildId, setGuildId, loading, fetchGuild, inviteUrl } = useDashboard();
   const [data, setData] = useState(null);
 
   useEffect(() => {
@@ -21,6 +22,14 @@ export default function OverviewPage() {
   }, [guildId, fetchGuild]);
 
   if (loading) return <div className="p-8">Loading...</div>;
+
+  if (!guilds.length) {
+    return (
+      <Layout guildId={guildId} guilds={guilds} onGuildChange={setGuildId}>
+        <NoBotServers inviteUrl={inviteUrl} />
+      </Layout>
+    );
+  }
 
   return (
     <Layout guildId={guildId} guilds={guilds} onGuildChange={setGuildId}>

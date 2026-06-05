@@ -2,8 +2,14 @@ const UserRepository = require('../repositories/UserRepository');
 const GuildSettingsRepository = require('../repositories/GuildSettingsRepository');
 const LogRepository = require('../repositories/LogRepository');
 const { levelFromTotalXp, xpRequiredForLevel } = require('../utils/level');
-const QuestService = require('./QuestService');
-const StreakService = require('./StreakService');
+
+/** Lazy-load to avoid circular dependency with QuestService / StreakService */
+function getQuestService() {
+  return require('./QuestService');
+}
+function getStreakService() {
+  return require('./StreakService');
+}
 
 let realtimeEmitter = null;
 
@@ -58,9 +64,9 @@ class XpService {
     LogRepository.logXp(userId, guildId, finalAmount, source, null);
     if (source === 'text') LogRepository.logTextXp(userId, guildId, null, null, finalAmount);
 
-    StreakService.recordActivity(userId, guildId);
-    QuestService.trackXpEarned(userId, guildId, finalAmount);
-    if (voiceTime) QuestService.trackVoiceMinutes(userId, guildId, Math.floor(voiceTime / 60));
+    getStreakService().recordActivity(userId, guildId);
+    getQuestService().trackXpEarned(userId, guildId, finalAmount);
+    if (voiceTime) getQuestService().trackVoiceMinutes(userId, guildId, Math.floor(voiceTime / 60));
 
     const leveledUp = user.level > oldLevel;
 

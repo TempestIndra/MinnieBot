@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const config = require('../../config');
+const botRegistry = require('../../discord/botRegistry');
 
 function requireAuth(req, res, next) {
   const token = req.cookies?.minnie_token || req.headers.authorization?.replace('Bearer ', '');
@@ -18,6 +19,10 @@ function requireGuildAdmin(req, res, next) {
 
   const guild = req.user.guilds?.find((g) => g.id === guildId);
   if (!guild) return res.status(403).json({ error: 'Not a member of this guild' });
+
+  if (!botRegistry.isBotInGuild(guildId)) {
+    return res.status(403).json({ error: 'Minnie bot is not in this server' });
+  }
 
   const perm = BigInt(guild.permissions);
   const ADMIN = BigInt(0x8);

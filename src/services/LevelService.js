@@ -17,7 +17,7 @@ class LevelService {
         assigned.push(role.id);
         LogRepository.logAdmin(guild.id, 'system', 'level_role_assigned', member.id, `Level ${lr.level} -> ${role.id}`);
       } catch (err) {
-        console.error(`[LevelService] Failed to assign role ${role.id}:`, err.message);
+        require('../utils/logger').child('levels').warn(`Failed to assign role ${role.id}: ${err.message}`);
       }
     }
 

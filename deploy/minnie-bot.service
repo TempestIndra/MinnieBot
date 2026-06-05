@@ -1,0 +1,26 @@
+[Unit]
+Description=Minnie XP Bot (supervisor + API)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=minnie
+Group=minnie
+WorkingDirectory=/opt/minnie
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node /opt/minnie/src/supervisor.js
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=minnie-bot
+
+# Hardening (optional)
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/minnie/data /opt/minnie/logs
+
+[Install]
+WantedBy=multi-user.target

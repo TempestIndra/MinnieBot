@@ -2,21 +2,26 @@ const VoiceService = require('../services/VoiceService');
 const cron = require('node-cron');
 const ResetService = require('../services/ResetService');
 const config = require('../config');
+const { getBotInviteUrl } = require('../utils/invite');
+const botRegistry = require('../discord/botRegistry');
+const logger = require('../utils/logger').child('bot');
 
 module.exports = {
-  name: 'ready',
+  name: 'clientReady',
   once: true,
   execute(client) {
-    console.log(`[Bot] Logged in as ${client.user.tag}`);
+    botRegistry.syncGuildsFromCache();
+    logger.info(`Logged in as ${client.user.tag} (${client.guilds.cache.size} servers)`);
+    logger.info(`Invite link: ${getBotInviteUrl(client.user.id)}`);
     VoiceService.initTick(client);
 
     cron.schedule(config.resets.weeklyCron, () => {
-      console.log('[Cron] Weekly reset');
+      logger.info('Weekly XP reset (cron)');
       ResetService.resetAllGuilds(client, 'weekly');
     });
 
     cron.schedule(config.resets.seasonCron, () => {
-      console.log('[Cron] Season reset');
+      logger.info('Season XP reset (cron)');
       ResetService.resetAllGuilds(client, 'season');
     });
 

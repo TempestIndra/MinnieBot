@@ -2,10 +2,11 @@
   "name": "minnie-xp-bot",
   "version": "1.0.0",
   "description": "Production-ready Discord XP bot with admin dashboard",
-  "main": "src/index.js",
+  "main": "src/supervisor.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node src/index.js",
+    "start": "node src/supervisor.js",
+    "start:worker": "node src/worker.js",
     "bot": "node src/bot.js",
     "api": "node src/api-server.js",
     "deploy-commands": "node src/deploy-commands.js",

@@ -4,6 +4,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const { Server } = require('socket.io');
 const config = require('./config');
+const logger = require('./utils/logger').child('api');
 const { initializeDatabase } = require('./database/init');
 const { createRouter } = require('./api/routes');
 const realtimeEmitter = require('./realtime/emitter');
@@ -38,19 +39,31 @@ function createApiServer() {
   app.get('/health', (_, res) => res.json({ status: 'ok' }));
   app.use('/api', createRouter());
 
-  app.use((err, _req, res, _next) => {
-    console.error('[API]', err);
+  app.use((err, req, res, _next) => {
+    logger.exception(`${req.method} ${req.path}`, err);
     res.status(500).json({ error: 'Internal server error' });
   });
 
   return { app, server, io };
 }
 
+function validateOAuthConfig() {
+  const { clientId, clientSecret } = config.discord;
+  if (!clientId) logger.warn('DISCORD_CLIENT_ID is missing — dashboard login will fail');
+  if (!clientSecret) logger.warn('DISCORD_CLIENT_SECRET is missing — dashboard login will fail');
+  else if (clientSecret === config.discord.token) {
+    logger.warn('DISCORD_CLIENT_SECRET looks like the bot token — use OAuth2 Client Secret instead');
+  }
+  logger.info(`OAuth redirect URI: ${config.oauth.redirectUri}`);
+}
+
 function startApi() {
+  validateOAuthConfig();
   const { server } = createApiServer();
   server.listen(config.api.port, () => {
-    console.log(`[API] Listening on http://localhost:${config.api.port}`);
+    logger.info(`Listening on http://localhost:${config.api.port}`);
   });
+  server.on('error', (err) => logger.exception('server', err));
   return server;
 }
 

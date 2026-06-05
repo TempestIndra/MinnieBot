@@ -9,6 +9,7 @@ const XpService = require('../../services/XpService');
 const EconomyService = require('../../services/EconomyService');
 const ResetService = require('../../services/ResetService');
 const { xpProgressInLevel } = require('../../utils/level');
+const botRegistry = require('../../discord/botRegistry');
 
 class GuildController {
   overview(req, res) {
@@ -115,16 +116,59 @@ class GuildController {
     res.json(LeaderboardService.get(req.guildId, type, source, parseInt(limit, 10)));
   }
 
+  listUsers(req, res) {
+    const limit = Math.min(parseInt(req.query.limit, 10) || 50, 100);
+    const offset = parseInt(req.query.offset, 10) || 0;
+    const users = UserRepository.listAll(req.guildId, limit, offset);
+    res.json({ users, total: UserRepository.getGuildStats(req.guildId).user_count });
+  }
+
   searchUsers(req, res) {
     const q = req.query.q || '';
-    res.json(UserRepository.search(req.guildId, q, 50));
+    res.json({ users: UserRepository.search(req.guildId, q, 50) });
+  }
+
+  async resolveUser(req, res) {
+    const userId = (req.body.userId || req.query.userId || '').trim();
+    if (!/^\d{17,20}$/.test(userId)) {
+      return res.status(400).json({ error: 'Invalid Discord user ID' });
+    }
+
+    let user = UserRepository.findById(req.guildId, userId);
+    if (user) {
+      return res.json(this._userPayload(req.guildId, user));
+    }
+
+    const client = botRegistry.getClient();
+    const guild = client?.guilds?.cache?.get(req.guildId);
+    if (!guild) {
+      return res.status(404).json({ error: 'User not in database. Bot must be online to import from Discord.' });
+    }
+
+    try {
+      const member = await guild.members.fetch(userId);
+      user = UserRepository.getOrCreate(userId, req.guildId, member.user.username);
+      return res.json(this._userPayload(req.guildId, user));
+    } catch {
+      return res.status(404).json({ error: 'Member not found in this server' });
+    }
+  }
+
+  _userPayload(guildId, user) {
+    const rank = UserRepository.getRank(user.user_id, guildId);
+    const progress = xpProgressInLevel(user.total_xp, user.level);
+    return {
+      user,
+      rank,
+      progress,
+      xpToNext: progress.needed - progress.current,
+    };
   }
 
   getUser(req, res) {
-    const user = UserRepository.getOrCreate(req.params.userId, req.guildId);
-    const rank = UserRepository.getRank(req.params.userId, req.guildId);
-    const progress = xpProgressInLevel(user.total_xp, user.level);
-    res.json({ user, rank, progress, xpToNext: progress.needed - progress.current });
+    const existing = UserRepository.findById(req.guildId, req.params.userId);
+    const user = existing || UserRepository.getOrCreate(req.params.userId, req.guildId);
+    res.json(this._userPayload(req.guildId, user));
   }
 
   adjustXp(req, res) {

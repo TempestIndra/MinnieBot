@@ -1,6 +1,5 @@
 const QuestRepository = require('../repositories/QuestRepository');
 const UserRepository = require('../repositories/UserRepository');
-const XpService = require('./XpService');
 const EconomyService = require('./EconomyService');
 const { todayKey } = require('../utils/dates');
 
@@ -84,7 +83,9 @@ class QuestService {
     if (p.claimed) return { ok: false, reason: 'already_claimed' };
 
     QuestRepository.claim(userId, guildId, questId);
-    if (q.reward_xp) XpService.award(userId, guildId, { amount: q.reward_xp, source: 'quest', skipDailyCap: true });
+    if (q.reward_xp) {
+      require('./XpService').award(userId, guildId, { amount: q.reward_xp, source: 'quest', skipDailyCap: true });
+    }
     if (q.reward_coins) EconomyService.addCoins(userId, guildId, q.reward_coins, 'quest');
 
     return { ok: true, rewards: { xp: q.reward_xp, coins: q.reward_coins } };

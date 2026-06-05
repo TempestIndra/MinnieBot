@@ -1,14 +1,25 @@
 require('dotenv').config();
 
+/** Trim whitespace and optional quotes from .env values */
+function env(key) {
+  const raw = process.env[key];
+  if (!raw) return undefined;
+  let v = raw.trim();
+  if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) {
+    v = v.slice(1, -1).trim();
+  }
+  return v;
+}
+
 module.exports = {
   discord: {
-    token: process.env.DISCORD_TOKEN,
-    clientId: process.env.DISCORD_CLIENT_ID,
-    clientSecret: process.env.DISCORD_CLIENT_SECRET,
+    token: env('DISCORD_TOKEN'),
+    clientId: env('DISCORD_CLIENT_ID'),
+    clientSecret: env('DISCORD_CLIENT_SECRET'),
   },
   oauth: {
-    redirectUri: process.env.OAUTH_REDIRECT_URI || 'http://localhost:3000/api/auth/callback',
-    scopes: (process.env.OAUTH_SCOPES || 'identify guilds').split(' '),
+    redirectUri: env('OAUTH_REDIRECT_URI') || 'http://localhost:3000/auth/discord/callback',
+    scopes: (env('OAUTH_SCOPES') || 'identify guilds').split(' '),
   },
   api: {
     port: parseInt(process.env.API_PORT || '4000', 10),
@@ -38,4 +49,12 @@ module.exports = {
     dailyCron: '0 0 * * *',
   },
   isDev: process.env.NODE_ENV !== 'production',
+  dashboard: {
+    url: env('DASHBOARD_URL') || 'http://localhost:3000',
+    linkText: env('DASHBOARD_LINK_TEXT') || 'Open Admin Dashboard',
+    embedTitle: env('DASHBOARD_EMBED_TITLE') || 'Minnie XP Dashboard',
+    embedDescription:
+      env('DASHBOARD_EMBED_DESCRIPTION')
+      || 'Manage XP rates, level roles, shop, quests, and more from the web dashboard. You must be a **server administrator** to sign in.',
+  },
 };

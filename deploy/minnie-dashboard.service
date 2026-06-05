@@ -1,0 +1,21 @@
+[Unit]
+Description=Minnie XP Dashboard (Next.js)
+After=network-online.target minnie-bot.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=minnie
+Group=minnie
+WorkingDirectory=/opt/minnie/dashboard
+Environment=NODE_ENV=production
+EnvironmentFile=/opt/minnie/.env
+ExecStart=/usr/bin/npm run start
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=minnie-dashboard
+
+[Install]
+WantedBy=multi-user.target

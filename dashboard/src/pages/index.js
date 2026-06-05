@@ -1,21 +1,14 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { getMe, getLoginUrl } from '../lib/api';
+import { getMe } from '../lib/api';
 
 export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
     getMe()
-      .then(() => router.push('/dashboard'))
-      .catch(async () => {
-        try {
-          const { url } = await getLoginUrl();
-          window.location.href = url;
-        } catch {
-          router.push('/login');
-        }
-      });
+      .then(() => router.replace('/dashboard'))
+      .catch(() => router.replace('/login'));
   }, [router]);
 
   return (

@@ -24,6 +24,10 @@ CREATE TABLE IF NOT EXISTS guild_settings (
   anti_spam_window INTEGER NOT NULL DEFAULT 10,
   anti_spam_max_messages INTEGER NOT NULL DEFAULT 5,
   voice_afk_threshold_minutes INTEGER NOT NULL DEFAULT 120,
+  dashboard_url TEXT,
+  dashboard_link_text TEXT,
+  dashboard_embed_title TEXT,
+  dashboard_embed_description TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );

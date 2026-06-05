@@ -40,6 +40,8 @@ async function startBot() {
     throw new Error('DISCORD_TOKEN is required in .env');
   }
   const client = createBot();
+  const botRegistry = require('./discord/botRegistry');
+  botRegistry.setClient(client);
   await client.login(config.discord.token);
   return client;
 }
@@ -47,8 +49,9 @@ async function startBot() {
 module.exports = { createBot, startBot };
 
 if (require.main === module) {
+  const logger = require('./utils/logger').child('bot');
   startBot().catch((err) => {
-    console.error('[Bot] Failed to start:', err);
+    logger.exception('start', err);
     process.exit(1);
   });
 }

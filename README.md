@@ -38,13 +38,18 @@ Slash commands and the dashboard both use the same services (`GuildConfigService
 
 ### 2. Invite the Bot
 
-Use this URL (replace `CLIENT_ID`):
+When you run `npm start`, the **bot invite link** is printed in the terminal. Copy it and open it in your browser to add Minnie to a server.
 
-```
-https://discord.com/api/oauth2/authorize?client_id=CLIENT_ID&permissions=268823632&scope=bot%20applications.commands
-```
+#### OAuth2 URL Generator (Developer Portal)
 
-Permissions: View Channels, Send Messages, Embed Links, Read History, Manage Roles, Use Slash Commands.
+You need **two different** OAuth setups:
+
+| Purpose | Scopes to check | Other settings |
+|---------|-----------------|----------------|
+| **Add bot to server** | `bot`, `applications.commands` | Bot permissions: View Channels, Send Messages, Embed Links, Read Message History, Manage Roles |
+| **Dashboard login** | `identify`, `guilds` | OAuth2 → Redirects: `http://localhost:3000/auth/discord/callback` |
+
+The bot invite URL is generated automatically on startup — you do not need to build it by hand unless you prefer the portal tool.
 
 ### 3. Configure Environment
 
@@ -62,6 +67,15 @@ npm run deploy-commands
 npm start
 ```
 
+`npm start` runs a **supervisor** that logs everything to `./logs/` and **auto-restarts** the bot if it crashes (up to 15 times per 10 minutes).
+
+| Log file | Contents |
+|----------|----------|
+| `logs/minnie-YYYY-MM-DD.log` | All output for that day |
+| `logs/crashes.log` | Errors, exceptions, crash reports |
+
+Run without supervisor: `npm run start:worker`
+
 In a second terminal:
 
 ```bash
@@ -69,17 +83,31 @@ npm run dashboard:dev
 ```
 
 - Bot + API: `http://localhost:4000`
-- Dashboard: `http://localhost:3000`
+- Dashboard: `http://localhost:3000` (proxies `/api/*` to Express so login cookies work)
+
+**Both must be running** for dashboard login (`npm start` + `npm run dashboard:dev`).
 
 ### 5. Login to Dashboard
 
 Open `http://localhost:3000` → **Login with Discord** → select a server you administrate.
 
+#### OAuth `invalid_client` troubleshooting
+
+| Check | Where |
+|-------|--------|
+| `DISCORD_CLIENT_ID` = **Application ID** | Developer Portal → **General Information** |
+| `DISCORD_CLIENT_SECRET` = **OAuth2 Client Secret** | Developer Portal → **OAuth2** → Client Secret (not Bot token) |
+| Redirect URI matches `.env` exactly | OAuth2 → **Redirects** → `http://localhost:3000/auth/discord/callback` |
+| No extra quotes/spaces in `.env` | Restart API after editing |
+
+If you reset the Client Secret in the portal, update `.env` and restart `npm start`.
+
 ## Slash Commands
 
 | Category | Commands |
 |----------|----------|
-| User | `/profile`, `/rank`, `/leaderboard`, `/prestige`, `/balance`, `/shop`, `/buy`, `/quests`, `/claimquest` |
+| User | `/profile`, `/rank`, `/leaderboard`, `/prestige`, `/balance`, `/shop`, `/buy`, `/quests`, `/claimquest`, `/dashboard` |
+| Dashboard | `/setdashboard` — customize embed title, description, link label, and URL (Admin) |
 | Economy | `/givecoins` |
 | Admin | `/setxprate`, `/settextxprate`, `/settextcooldown`, `/setdailycap`, `/setlevelrole`, `/levelroles`, channel/category rules, `/addxp`, `/resetuser`, etc. |
 
@@ -111,6 +139,10 @@ src/
 dashboard/                # Next.js admin UI
 schema.sql
 ```
+
+## Hosting on Proxmox
+
+See **[docs/DEPLOY-PROXMOX.md](docs/DEPLOY-PROXMOX.md)** for a full guide (VM setup, systemd, Nginx, SSL, Discord OAuth in production). Service templates are in `deploy/`.
 
 ## Production Notes
 

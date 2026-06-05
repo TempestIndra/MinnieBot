@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { logout } from '../lib/api';
 
 const NAV = [
   { href: '/dashboard', label: 'Overview' },
@@ -19,7 +20,16 @@ export default function Layout({ children, guildId, guilds, onGuildChange }) {
   return (
     <div className="min-h-screen flex">
       <aside className="w-64 bg-surface border-r border-gray-800 p-4 flex flex-col gap-4">
-        <h1 className="text-xl font-bold text-discord">Minnie XP</h1>
+        <div className="flex items-center justify-between gap-2">
+          <h1 className="text-xl font-bold text-discord">Minnie XP</h1>
+          <button
+            type="button"
+            onClick={() => logout().then(() => router.push('/login'))}
+            className="text-xs text-gray-500 hover:text-gray-300"
+          >
+            Logout
+          </button>
+        </div>
         <select
           className="bg-surface-light rounded px-3 py-2 text-sm"
           value={guildId || ''}
