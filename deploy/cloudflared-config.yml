@@ -5,7 +5,8 @@
 #   sudo cloudflared tunnel create minnie
 #   sudo cp <credentials>.json /etc/cloudflared/credentials.json
 #   sudo cloudflared tunnel route dns minnie minnie.yourdomain.com
-#   sudo cloudflared service install --config /etc/cloudflared/config.yml
+#   sudo cloudflared --config /etc/cloudflared/config.yml service install
+#   (or: sudo cloudflared service install  if this file is already at /etc/cloudflared/config.yml)
 
 tunnel: minnie
 credentials-file: /etc/cloudflared/credentials.json

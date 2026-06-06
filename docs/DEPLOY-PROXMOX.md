@@ -193,7 +193,9 @@ sudo cloudflared tunnel create minnie
 sudo cp /opt/minnie/deploy/cloudflared-config.yml /etc/cloudflared/config.yml
 # edit config.yml — set your subdomain
 sudo cloudflared tunnel route dns minnie minnie.yourdomain.com
-sudo cloudflared service install --config /etc/cloudflared/config.yml
+sudo cloudflared service install
+# or: sudo cloudflared --config /etc/cloudflared/config.yml service install
+sudo systemctl enable cloudflared
 sudo systemctl start cloudflared
 ```
 

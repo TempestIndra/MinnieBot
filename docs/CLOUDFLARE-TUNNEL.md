@@ -117,8 +117,23 @@ In Cloudflare DNS you should see a CNAME:
 
 ## Step 6 — Run as a systemd service
 
+`--config` is a **global** flag — it must come **before** `service install` (not after).
+
+If `config.yml` is already at `/etc/cloudflared/config.yml`:
+
 ```bash
-sudo cloudflared service install --config /etc/cloudflared/config.yml
+sudo cloudflared service install
+```
+
+If the installer cannot find your config (e.g. it lives under `/home/nick/.cloudflared/`):
+
+```bash
+sudo cloudflared --config /etc/cloudflared/config.yml service install
+```
+
+The install command creates `/etc/systemd/system/cloudflared.service`. Then:
+
+```bash
 sudo systemctl enable cloudflared
 sudo systemctl start cloudflared
 sudo systemctl status cloudflared
