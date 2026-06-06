@@ -5,22 +5,20 @@ Wants=network-online.target
 
 [Service]
 Type=simple
+# Change User/Group if you deploy as a different user (e.g. nick)
 User=minnie
 Group=minnie
 WorkingDirectory=/opt/minnie
 Environment=NODE_ENV=production
+EnvironmentFile=/opt/minnie/.env
+# Ensure writable dirs exist (ProtectSystem was removed — it caused exit 226/NAMESPACE)
+ExecStartPre=/bin/mkdir -p /opt/minnie/data /opt/minnie/logs
 ExecStart=/usr/bin/node /opt/minnie/src/supervisor.js
 Restart=on-failure
 RestartSec=10
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=minnie-bot
-
-# Hardening (optional)
-NoNewPrivileges=true
-ProtectSystem=strict
-ProtectHome=true
-ReadWritePaths=/opt/minnie/data /opt/minnie/logs
 
 [Install]
 WantedBy=multi-user.target

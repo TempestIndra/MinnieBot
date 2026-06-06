@@ -125,6 +125,7 @@ cd /opt/minnie && npm run deploy-commands
 Copy service files from `deploy/`:
 
 ```bash
+# If you deploy as user "nick" instead of "minnie", edit User=/Group= in both .service files first
 sudo cp /opt/minnie/deploy/minnie-bot.service /etc/systemd/system/
 sudo cp /opt/minnie/deploy/minnie-dashboard.service /etc/systemd/system/
 sudo systemctl daemon-reload
@@ -132,6 +133,10 @@ sudo systemctl enable minnie-bot minnie-dashboard
 sudo systemctl start minnie-bot minnie-dashboard
 sudo systemctl status minnie-bot minnie-dashboard
 ```
+
+**`status=226/NAMESPACE` on minnie-bot:** Old service files used `ProtectSystem=strict` which breaks Node on some systems. Re-copy `minnie-bot.service` from the repo (hardening removed) and `daemon-reload` + `restart`.
+
+**Wrong Node path:** Run `which node` — if not `/usr/bin/node`, update `ExecStart=` in `minnie-bot.service`.
 
 Logs:
 
