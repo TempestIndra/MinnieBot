@@ -33,23 +33,62 @@ function getCommandsToDeploy() {
   return { commands: filtered, names: filtered.map((c) => c.name), mode: 'essential' };
 }
 
+async function validateBotCredentials(rest, clientId) {
+  try {
+    const app = await rest.get(Routes.oauth2CurrentApplication());
+    if (String(app.id) !== String(clientId)) {
+      console.error('[deploy] DISCORD_CLIENT_ID does not match this bot token\'s application.');
+      console.error(`  .env CLIENT_ID: ${clientId}`);
+      console.error(`  Token app ID:   ${app.id}`);
+      process.exit(1);
+    }
+    console.log(`[deploy] Bot application: ${app.name} (${app.id})`);
+  } catch (err) {
+    if (err.status === 401) {
+      console.error('[deploy] 401 Unauthorized — Discord rejected DISCORD_TOKEN.');
+      console.error('');
+      console.error('Fix on the server (/opt/minnie/.env):');
+      console.error('  1. Developer Portal → Your App → Bot → Reset Token → copy new token');
+      console.error('  2. Set DISCORD_TOKEN=<bot token>  (NOT client secret, NOT OAuth token)');
+      console.error('  3. Set DISCORD_CLIENT_ID=<Application ID from General Information>');
+      console.error('  4. Both must be from the SAME application');
+      console.error('  5. No quotes or spaces around values');
+      console.error('');
+      console.error('Test: grep DISCORD_TOKEN /opt/minnie/.env  (file must exist and be readable)');
+      process.exit(1);
+    }
+    throw err;
+  }
+}
+
 async function deploy() {
-  if (!config.discord.token || !config.discord.clientId) {
-    throw new Error('DISCORD_TOKEN and DISCORD_CLIENT_ID are required in .env');
+  const token = config.discord.token;
+  const clientId = config.discord.clientId;
+
+  if (!token || !clientId) {
+    console.error('[deploy] Missing DISCORD_TOKEN or DISCORD_CLIENT_ID in /opt/minnie/.env');
+    process.exit(1);
+  }
+
+  if (token === config.discord.clientSecret) {
+    console.error('[deploy] DISCORD_TOKEN looks like DISCORD_CLIENT_SECRET — use the Bot token instead.');
+    process.exit(1);
   }
 
   const { commands, names, mode } = getCommandsToDeploy();
-  const rest = new REST({ version: '10' }).setToken(config.discord.token);
+  const rest = new REST({ version: '10' }).setToken(token);
+
+  await validateBotCredentials(rest, clientId);
 
   console.log(`Deploying ${commands.length} slash commands (${mode})...`);
   console.log(names.join(', '));
 
-  await rest.put(Routes.applicationCommands(config.discord.clientId), { body: commands });
+  await rest.put(Routes.applicationCommands(clientId), { body: commands });
   console.log('Successfully deployed global commands.');
   console.log('Note: Removed commands may still appear in Discord for up to ~1 hour (global command cache).');
 }
 
 deploy().catch((err) => {
-  console.error('[deploy] Failed:', err);
+  if (err.status !== 401) console.error('[deploy] Failed:', err);
   process.exit(1);
 });
