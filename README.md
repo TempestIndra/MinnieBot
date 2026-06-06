@@ -63,7 +63,7 @@ Edit `.env` with your token, client ID, and secrets.
 
 ```bash
 npm run install:all
-npm run deploy-commands
+npm run deploy-commands   # edits: src/config/essential-commands.js
 npm start
 ```
 

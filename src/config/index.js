@@ -55,6 +55,6 @@ module.exports = {
     embedTitle: env('DASHBOARD_EMBED_TITLE') || 'Minnie XP Dashboard',
     embedDescription:
       env('DASHBOARD_EMBED_DESCRIPTION')
-      || 'Manage XP rates, level roles, shop, quests, and more from the web dashboard. You must be a **server administrator** to sign in.',
+      || 'Manage XP rates, level roles, shop, quests, and more. **Server administrators only.**',
   },
 };

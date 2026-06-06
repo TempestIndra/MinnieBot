@@ -25,7 +25,7 @@ function buildDashboardPayload(guild) {
     .setTitle(cfg.title)
     .setDescription(description)
     .setURL(safeUrl)
-    .setFooter({ text: `${guild.name} • Admin access required` })
+    .setFooter({ text: `${guild.name} • Administrators only` })
     .setTimestamp();
 
   const row = new ActionRowBuilder().addComponents(
