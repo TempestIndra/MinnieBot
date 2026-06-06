@@ -33,7 +33,7 @@ Slash commands and the dashboard both use the same services (`GuildConfigService
 1. Go to [Discord Developer Portal](https://discord.com/developers/applications)
 2. Create an application → **Bot** → copy token
 3. Enable **Message Content Intent** and **Server Members Intent**
-4. OAuth2 → add redirect: `http://localhost:3000/api/auth/callback`
+4. OAuth2 → add redirect: `http://localhost:3000/auth/discord/callback`
 5. Copy **Client ID** and **Client Secret**
 
 ### 2. Invite the Bot
@@ -97,21 +97,26 @@ Open `http://localhost:3000` → **Login with Discord** → select a server you 
 |-------|--------|
 | `DISCORD_CLIENT_ID` = **Application ID** | Developer Portal → **General Information** |
 | `DISCORD_CLIENT_SECRET` = **OAuth2 Client Secret** | Developer Portal → **OAuth2** → Client Secret (not Bot token) |
-| Redirect URI matches `.env` exactly | OAuth2 → **Redirects** → `http://localhost:3000/auth/discord/callback` |
+| Redirect URI matches `.env` exactly | OAuth2 → **Redirects** → `http://localhost:3000/auth/discord/callback` (same as `OAUTH_REDIRECT_URI`) |
 | No extra quotes/spaces in `.env` | Restart API after editing |
 
 If you reset the Client Secret in the portal, update `.env` and restart `npm start`.
 
 ## Slash Commands
 
-| Category | Commands |
-|----------|----------|
-| User | `/profile`, `/rank`, `/leaderboard`, `/prestige`, `/balance`, `/shop`, `/buy`, `/quests`, `/claimquest`, `/dashboard` |
-| Dashboard | `/setdashboard` — customize embed title, description, link label, and URL (Admin) |
-| Economy | `/givecoins` |
-| Admin | `/setxprate`, `/settextxprate`, `/settextcooldown`, `/setdailycap`, `/setlevelrole`, `/levelroles`, channel/category rules, `/addxp`, `/resetuser`, etc. |
+By default, `npm run deploy-commands` registers **user commands only** (see `src/config/essential-commands.js`):
 
-All admin settings are also available in the dashboard.
+| Command | Who |
+|---------|-----|
+| `/profile`, `/rank`, `/leaderboard`, `/prestige`, `/balance` | Everyone |
+| `/shop`, `/buy`, `/quests`, `/claimquest` | Everyone |
+| `/dashboard` | **Administrators only** (link to web panel) |
+
+**Server configuration** (XP rates, level roles, channels, shop, users, etc.) is done in the **web dashboard**, not Discord slash commands.
+
+Customize the deploy list in `src/config/essential-commands.js`, or set `DEPLOY_ALL_COMMANDS=true` in `.env` to register every command in `src/commands/` (including legacy admin slash commands).
+
+Customize `/dashboard` embed text via `.env` (`DASHBOARD_LINK_TEXT`, `DASHBOARD_EMBED_TITLE`, `DASHBOARD_EMBED_DESCRIPTION`, `DASHBOARD_URL`).
 
 ## XP Rules
 
@@ -126,7 +131,9 @@ All admin settings are also available in the dashboard.
 
 ```
 src/
-├── index.js              # Bot + API entry
+├── supervisor.js         # Auto-restart + logging (npm start)
+├── worker.js             # Bot + API process
+├── deploy-commands.js    # Registers essential-commands.js list
 ├── bot.js                # Discord client
 ├── api-server.js         # Express + Socket.io
 ├── deploy-commands.js

@@ -112,7 +112,7 @@ Rebuild dashboard after changing public URLs:
 cd /opt/minnie/dashboard && npm run build
 ```
 
-Deploy slash commands once:
+Deploy slash commands once (user commands only by default — edit `src/config/essential-commands.js` first):
 
 ```bash
 cd /opt/minnie && npm run deploy-commands
@@ -248,7 +248,7 @@ cd /opt/minnie
 git pull
 npm run install:all
 cd dashboard && npm run build && cd ..
-npm run deploy-commands   # if commands changed
+npm run deploy-commands   # if essential-commands.js changed
 sudo systemctl restart minnie-bot minnie-dashboard
 ```
 
