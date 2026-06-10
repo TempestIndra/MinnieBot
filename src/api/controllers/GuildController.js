@@ -10,6 +10,8 @@ const EconomyService = require('../../services/EconomyService');
 const ResetService = require('../../services/ResetService');
 const { xpProgressInLevel } = require('../../utils/level');
 const botRegistry = require('../../discord/botRegistry');
+const { enrichLeaderboardRows } = require('../../utils/usernames');
+const DashboardAccessService = require('../../services/DashboardAccessService');
 
 class GuildController {
   overview(req, res) {
@@ -25,6 +27,14 @@ class GuildController {
   }
 
   updateSettings(req, res) {
+    const accessFields = ['dashboard_min_role_id', 'dashboard_allowed_role_ids'];
+    const touchesAccess = Object.keys(req.body || {}).some((k) => accessFields.includes(k));
+    if (touchesAccess) {
+      const guildEntry = req.user.guilds?.find((g) => g.id === req.guildId);
+      if (!DashboardAccessService.canManageDashboardAccess(req.user, guildEntry)) {
+        return res.status(403).json({ error: 'Only server administrators can change dashboard access rules' });
+      }
+    }
     const updated = GuildConfigService.updateSettings(req.guildId, req.body, req.user.id);
     res.json(updated);
   }
@@ -111,9 +121,14 @@ class GuildController {
     res.json({ ok: true });
   }
 
-  getLeaderboard(req, res) {
+  async getLeaderboard(req, res) {
     const { type = 'alltime', source = 'total', limit = 25 } = req.query;
-    res.json(LeaderboardService.get(req.guildId, type, source, parseInt(limit, 10)));
+    let rows = LeaderboardService.get(req.guildId, type, source, parseInt(limit, 10));
+    const guild = botRegistry.getClient()?.guilds?.cache?.get(req.guildId);
+    if (guild) {
+      rows = await enrichLeaderboardRows(guild, rows);
+    }
+    res.json(rows);
   }
 
   listUsers(req, res) {

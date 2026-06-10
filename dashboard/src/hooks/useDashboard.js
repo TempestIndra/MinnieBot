@@ -6,6 +6,7 @@ import { joinGuild, getSocket } from '../lib/socket';
 export function useDashboard() {
   const router = useRouter();
   const [user, setUser] = useState(null);
+  const [isDev, setIsDev] = useState(false);
   const [inviteUrl, setInviteUrl] = useState(null);
   const [guildId, setGuildId] = useState('');
   const [loading, setLoading] = useState(true);
@@ -14,6 +15,7 @@ export function useDashboard() {
     getMe()
       .then((data) => {
         setUser(data.user);
+        setIsDev(Boolean(data.isDev));
         setInviteUrl(data.inviteUrl || null);
         if (!data.user.guilds?.length) {
           setLoading(false);
@@ -45,6 +47,7 @@ export function useDashboard() {
 
   return {
     user,
+    isDev,
     inviteUrl,
     guilds: user?.guilds || [],
     guildId,

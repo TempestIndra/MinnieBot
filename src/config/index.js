@@ -51,11 +51,15 @@ module.exports = {
   },
   isDev: process.env.NODE_ENV !== 'production',
   dashboard: {
+    devUserIds: (env('DASHBOARD_DEV_USER_IDS') || '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean),
     url: env('DASHBOARD_URL') || 'http://localhost:3000',
     linkText: env('DASHBOARD_LINK_TEXT') || 'Open Admin Dashboard',
     embedTitle: env('DASHBOARD_EMBED_TITLE') || 'Minnie XP Dashboard',
     embedDescription:
       env('DASHBOARD_EMBED_DESCRIPTION')
-      || 'Manage XP rates, level roles, shop, quests, and more. **Server administrators only.**',
+      || 'Manage XP rates, level roles, shop, quests, and more.',
   },
 };

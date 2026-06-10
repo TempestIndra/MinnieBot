@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const config = require('../../config');
-const BotGuildService = require('../../services/BotGuildService');
+const DashboardAccessService = require('../../services/DashboardAccessService');
 const { getBotInviteUrl } = require('../../utils/invite');
 
 const DISCORD_API = 'https://discord.com/api/v10';
@@ -62,14 +62,10 @@ class AuthController {
     const guilds = await guildsRes.json();
     const guildList = Array.isArray(guilds) ? guilds : [];
 
-    const adminGuilds = guildList
-      .filter((g) => (BigInt(g.permissions) & 8n) === 8n)
-      .map((g) => ({ id: g.id, name: g.name, permissions: g.permissions }));
-
-    const guildsWithBot = await BotGuildService.filterAdminGuildsWithBotAsync(adminGuilds);
+    const guildsWithAccess = await DashboardAccessService.resolveAccessibleGuilds(user.id, guildList);
 
     const token = jwt.sign(
-      { id: user.id, username: user.username, avatar: user.avatar, guilds: guildsWithBot },
+      { id: user.id, username: user.username, avatar: user.avatar, guilds: guildsWithAccess },
       config.api.jwtSecret,
       { expiresIn: '7d' }
     );
@@ -77,7 +73,7 @@ class AuthController {
     return {
       ok: true,
       token,
-      user: { id: user.id, username: user.username, avatar: user.avatar, guilds: guildsWithBot },
+      user: { id: user.id, username: user.username, avatar: user.avatar, guilds: guildsWithAccess },
     };
   }
 
@@ -99,10 +95,14 @@ class AuthController {
   }
 
   me(req, res) {
-    const guildsWithBot = BotGuildService.filterAdminGuildsWithBot(req.user.guilds || []);
+    const isDev = DashboardAccessService.isDevUser(req.user.id);
+    const guilds = isDev
+      ? DashboardAccessService.getBotGuildList().map((g) => ({ ...g, access: 'dev' }))
+      : DashboardAccessService.filterStillInstalled(req.user.guilds || []);
     res.json({
-      user: { ...req.user, guilds: guildsWithBot },
+      user: { ...req.user, guilds },
       inviteUrl: getBotInviteUrl(config.discord.clientId),
+      isDev,
     });
   }
 

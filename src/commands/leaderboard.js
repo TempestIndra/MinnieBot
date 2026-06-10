@@ -23,8 +23,9 @@ module.exports = {
   async execute(interaction) {
     const type = interaction.options.getString('type');
     const source = interaction.options.getString('source');
-    const rows = LeaderboardService.get(interaction.guild.id, type, source, 10);
+    await interaction.deferReply();
+    const rows = await LeaderboardService.getEnriched(interaction.guild, type, source, 10);
     const title = `${interaction.guild.name} — ${type} ${source} leaderboard`;
-    await interaction.reply({ embeds: [leaderboardEmbed(title, rows, source)] });
+    await interaction.editReply({ embeds: [leaderboardEmbed(title, rows, source)] });
   },
 };

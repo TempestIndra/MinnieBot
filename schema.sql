@@ -28,6 +28,8 @@ CREATE TABLE IF NOT EXISTS guild_settings (
   dashboard_link_text TEXT,
   dashboard_embed_title TEXT,
   dashboard_embed_description TEXT,
+  dashboard_min_role_id TEXT,
+  dashboard_allowed_role_ids TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );

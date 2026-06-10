@@ -1,9 +1,10 @@
 export default function NoBotServers({ inviteUrl }) {
   return (
     <div className="max-w-lg">
-      <h2 className="text-2xl font-bold mb-4">No servers with Minnie</h2>
+      <h2 className="text-2xl font-bold mb-4">No servers available</h2>
       <p className="text-gray-400 mb-4">
-        The dashboard only lists servers where you have <strong>Administrator</strong> and the{' '}
+        The dashboard lists servers where you have <strong>Administrator</strong>, a{' '}
+        <strong>configured dashboard role</strong>, or <strong>developer access</strong>, and where the{' '}
         <strong>Minnie bot is installed</strong>.
       </p>
       {inviteUrl ? (

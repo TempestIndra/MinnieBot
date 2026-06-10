@@ -8,6 +8,11 @@ const MIGRATIONS = [
   'ALTER TABLE guild_settings ADD COLUMN dashboard_link_text TEXT',
   'ALTER TABLE guild_settings ADD COLUMN dashboard_embed_title TEXT',
   'ALTER TABLE guild_settings ADD COLUMN dashboard_embed_description TEXT',
+  'ALTER TABLE guild_settings ADD COLUMN leaderboard_restricted INTEGER NOT NULL DEFAULT 0',
+  'ALTER TABLE guild_settings ADD COLUMN leaderboard_min_role_id TEXT',
+  'ALTER TABLE guild_settings ADD COLUMN leaderboard_allowed_role_ids TEXT',
+  'ALTER TABLE guild_settings ADD COLUMN dashboard_min_role_id TEXT',
+  'ALTER TABLE guild_settings ADD COLUMN dashboard_allowed_role_ids TEXT',
 ];
 
 function runMigrations(db) {

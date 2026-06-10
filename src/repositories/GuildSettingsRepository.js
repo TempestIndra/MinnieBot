@@ -31,6 +31,7 @@ class GuildSettingsRepository {
       'prestige_role_id', 'coin_voice_rate', 'coin_text_rate', 'prestige_xp_multiplier',
       'prestige_coin_multiplier', 'anti_spam_window', 'anti_spam_max_messages', 'voice_afk_threshold_minutes',
       'dashboard_url', 'dashboard_link_text', 'dashboard_embed_title', 'dashboard_embed_description',
+      'dashboard_min_role_id', 'dashboard_allowed_role_ids',
     ];
     const sets = [];
     const values = [];

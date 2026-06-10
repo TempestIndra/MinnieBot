@@ -3,19 +3,20 @@ const { levelFromTotalXp } = require('../utils/level');
 const { todayKey } = require('../utils/dates');
 
 class UserRepository {
-  getOrCreate(userId, guildId, username = 'Unknown') {
+  getOrCreate(userId, guildId, username) {
     const db = getDatabase();
+    const resolvedName = username && username !== 'Unknown' ? username : null;
     let user = db.prepare('SELECT * FROM users WHERE user_id = ? AND guild_id = ?').get(userId, guildId);
     if (!user) {
       db.prepare(`
         INSERT INTO users (user_id, guild_id, username, daily_xp_reset_date)
         VALUES (?, ?, ?, ?)
-      `).run(userId, guildId, username, todayKey());
+      `).run(userId, guildId, resolvedName || 'Unknown', todayKey());
       user = db.prepare('SELECT * FROM users WHERE user_id = ? AND guild_id = ?').get(userId, guildId);
-    } else if (username && user.username !== username) {
+    } else if (resolvedName && (user.username === 'Unknown' || user.username !== resolvedName)) {
       db.prepare('UPDATE users SET username = ?, updated_at = datetime(\'now\') WHERE user_id = ? AND guild_id = ?')
-        .run(username, userId, guildId);
-      user.username = username;
+        .run(resolvedName, userId, guildId);
+      user.username = resolvedName;
     }
     return this._resetDailyIfNeeded(user);
   }

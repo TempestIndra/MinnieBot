@@ -1,4 +1,5 @@
 const UserRepository = require('../repositories/UserRepository');
+const { enrichLeaderboardRows } = require('../utils/usernames');
 
 const TYPE_MAP = {
   weekly: 'weekly_xp',
@@ -20,6 +21,11 @@ class LeaderboardService {
     else if (type === 'alltime' && source !== 'total') orderBy = SOURCE_MAP[source];
 
     return UserRepository.getLeaderboard(guildId, { orderBy, limit });
+  }
+
+  async getEnriched(guild, type = 'alltime', source = 'total', limit = 10) {
+    const rows = this.get(guild.id, type, source, limit);
+    return enrichLeaderboardRows(guild, rows);
   }
 }
 
