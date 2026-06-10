@@ -1,5 +1,6 @@
 const { EmbedBuilder } = require('discord.js');
-const { xpRequiredForLevel, xpProgressInLevel } = require('./level');
+const { xpProgressInLevel } = require('./level');
+const { escapeDisplayName } = require('./discordMarkdown');
 
 function profileEmbed(user, rank, settings) {
   const { current, needed } = xpProgressInLevel(user.total_xp, user.level);
@@ -8,7 +9,7 @@ function profileEmbed(user, rank, settings) {
 
   return new EmbedBuilder()
     .setColor(0x5865f2)
-    .setTitle(`${user.username}'s Profile`)
+    .setTitle(`${escapeDisplayName(user.username)}'s Profile`)
     .setDescription(`Rank **#${rank}**`)
     .addFields(
       { name: 'General', value: `Level **${user.level}** | Prestige **${user.prestige}**\nTotal XP **${user.total_xp.toLocaleString()}**`, inline: false },
@@ -24,7 +25,7 @@ function leaderboardEmbed(title, rows, source) {
   const lines = rows.length
     ? rows.map((r, i) => {
         const xp = source === 'voice' ? r.voice_xp : source === 'text' ? r.text_xp : r.total_xp;
-        return `**${i + 1}.** ${r.username} — Lv.${r.level} P${r.prestige} — **${xp.toLocaleString()}** XP`;
+        return `**${i + 1}.** ${escapeDisplayName(r.username)} — Lv.${r.level} P${r.prestige} — **${xp.toLocaleString()}** XP`;
       }).join('\n')
     : 'No data yet.';
 

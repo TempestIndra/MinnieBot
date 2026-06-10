@@ -1,6 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const EconomyService = require('../services/EconomyService');
 const { isAdmin } = require('../utils/permissions');
+const { escapeDisplayName } = require('../utils/discordMarkdown');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -16,6 +17,7 @@ module.exports = {
     }
     EconomyService.removeCoins(interaction.user.id, interaction.guild.id, amount, interaction.user.id);
     EconomyService.addCoins(user.id, interaction.guild.id, amount, 'give');
-    await interaction.reply({ content: `Transferred **${amount}** coins to ${user.username}.` });
+    const name = interaction.options.getMember('user')?.displayName || user.username;
+    await interaction.reply({ content: `Transferred **${amount}** coins to ${escapeDisplayName(name)}.` });
   },
 };
