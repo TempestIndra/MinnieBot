@@ -7,15 +7,20 @@ export default function XpConfigPage() {
   const { guilds, guildId, setGuildId, loading, fetchGuild } = useDashboard();
   const [settings, setSettings] = useState(null);
   const [saved, setSaved] = useState(false);
+  const [capDisabled, setCapDisabled] = useState(false);
 
   useEffect(() => {
     if (!guildId) return;
-    fetchGuild('/settings').then(setSettings);
+    fetchGuild('/settings').then((s) => {
+      setSettings(s);
+      setCapDisabled(!s.daily_xp_cap || s.daily_xp_cap <= 0);
+    });
   }, [guildId, fetchGuild]);
 
   async function save(e) {
     e.preventDefault();
     const form = new FormData(e.target);
+    const capValue = capDisabled ? 0 : parseInt(form.get('daily_xp_cap'), 10);
     await guildApi(guildId, '/settings', {
       method: 'PATCH',
       body: JSON.stringify({
@@ -23,7 +28,7 @@ export default function XpConfigPage() {
         text_xp_min: parseInt(form.get('text_xp_min'), 10),
         text_xp_max: parseInt(form.get('text_xp_max'), 10),
         text_cooldown: parseInt(form.get('text_cooldown'), 10),
-        daily_xp_cap: parseInt(form.get('daily_xp_cap'), 10),
+        daily_xp_cap: capValue,
         min_message_length: parseInt(form.get('min_message_length'), 10),
         anti_spam_window: parseInt(form.get('anti_spam_window'), 10),
         anti_spam_max_messages: parseInt(form.get('anti_spam_max_messages'), 10),
@@ -32,7 +37,10 @@ export default function XpConfigPage() {
     });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
-    fetchGuild('/settings').then(setSettings);
+    fetchGuild('/settings').then((s) => {
+      setSettings(s);
+      setCapDisabled(!s.daily_xp_cap || s.daily_xp_cap <= 0);
+    });
   }
 
   if (loading) return <div className="p-8">Loading...</div>;
@@ -48,7 +56,28 @@ export default function XpConfigPage() {
             <Field label="Text XP Max" name="text_xp_max" defaultValue={settings.text_xp_max} type="number" />
           </div>
           <Field label="Text Cooldown (sec)" name="text_cooldown" defaultValue={settings.text_cooldown} type="number" />
-          <Field label="Daily XP Cap" name="daily_xp_cap" defaultValue={settings.daily_xp_cap} type="number" />
+          <div className="space-y-2">
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={capDisabled}
+                onChange={(e) => setCapDisabled(e.target.checked)}
+              />
+              <span className="text-sm">Disable daily XP cap</span>
+            </label>
+            {!capDisabled && (
+              <Field
+                label="Daily XP Cap"
+                name="daily_xp_cap"
+                defaultValue={settings.daily_xp_cap > 0 ? settings.daily_xp_cap : 500}
+                type="number"
+                min={1}
+              />
+            )}
+            {capDisabled && (
+              <p className="text-sm text-gray-400">Members can earn unlimited XP per day.</p>
+            )}
+          </div>
           <Field label="Min Message Length" name="min_message_length" defaultValue={settings.min_message_length} type="number" />
           <Field label="Anti-Spam Window (sec)" name="anti_spam_window" defaultValue={settings.anti_spam_window} type="number" />
           <Field label="Max Messages in Window" name="anti_spam_max_messages" defaultValue={settings.anti_spam_max_messages} type="number" />
@@ -61,11 +90,11 @@ export default function XpConfigPage() {
   );
 }
 
-function Field({ label, name, defaultValue, type = 'text', step }) {
+function Field({ label, name, defaultValue, type = 'text', step, min }) {
   return (
     <label className="block">
       <span className="text-sm text-gray-400">{label}</span>
-      <input name={name} type={type} step={step} defaultValue={defaultValue}
+      <input name={name} type={type} step={step} min={min} defaultValue={defaultValue}
         className="mt-1 w-full bg-surface-light rounded px-3 py-2 border border-gray-700" />
     </label>
   );

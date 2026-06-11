@@ -1,11 +1,11 @@
 const { EmbedBuilder } = require('discord.js');
 const { xpProgressInLevel } = require('./level');
 const { escapeDisplayName } = require('./discordMarkdown');
+const { formatDailyCapProgress } = require('./dailyCap');
 
 function profileEmbed(user, rank, settings) {
   const { current, needed } = xpProgressInLevel(user.total_xp, user.level);
-  const dailyCap = settings?.daily_xp_cap ?? 500;
-  const remainingDaily = Math.max(0, dailyCap - (user.daily_xp_earned || 0));
+  const dailyLine = formatDailyCapProgress(user, settings);
 
   return new EmbedBuilder()
     .setColor(0x5865f2)
@@ -15,7 +15,7 @@ function profileEmbed(user, rank, settings) {
       { name: 'General', value: `Level **${user.level}** | Prestige **${user.prestige}**\nTotal XP **${user.total_xp.toLocaleString()}**`, inline: false },
       { name: 'Voice', value: `Voice XP **${user.voice_xp.toLocaleString()}**\nVoice Time **${formatVoiceTime(user.voice_time_seconds)}**`, inline: true },
       { name: 'Text', value: `Text XP **${user.text_xp.toLocaleString()}**\nMessages **${user.message_count.toLocaleString()}**`, inline: true },
-      { name: 'Progression', value: `Weekly **${user.weekly_xp.toLocaleString()}** | Season **${user.seasonal_xp.toLocaleString()}**\nNext Level **${current}/${needed}** XP\nDaily **${user.daily_xp_earned}/${dailyCap}** (${remainingDaily} left)`, inline: false },
+      { name: 'Progression', value: `Weekly **${user.weekly_xp.toLocaleString()}** | Season **${user.seasonal_xp.toLocaleString()}**\nNext Level **${current}/${needed}** XP\n${dailyLine}`, inline: false },
       { name: 'Economy', value: `Coins **${user.coins.toLocaleString()}** | Streak **${user.streak_count}** days`, inline: false }
     )
     .setTimestamp();

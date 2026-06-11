@@ -2,6 +2,7 @@ const UserRepository = require('../repositories/UserRepository');
 const GuildSettingsRepository = require('../repositories/GuildSettingsRepository');
 const LogRepository = require('../repositories/LogRepository');
 const { levelFromTotalXp, xpRequiredForLevel } = require('../utils/level');
+const { isDailyCapEnabled, dailyCapLimit } = require('../utils/dailyCap');
 
 /** Lazy-load to avoid circular dependency with QuestService / StreakService */
 function getQuestService() {
@@ -31,8 +32,8 @@ class XpService {
     const prestigeMult = 1 + (user.prestige * ((settings.prestige_xp_multiplier || 1.1) - 1) * 0.1);
     let finalAmount = Math.floor(amount * prestigeMult);
 
-    if (!skipDailyCap) {
-      const remaining = Math.max(0, settings.daily_xp_cap - user.daily_xp_earned);
+    if (!skipDailyCap && isDailyCapEnabled(settings)) {
+      const remaining = Math.max(0, dailyCapLimit(settings) - user.daily_xp_earned);
       if (remaining <= 0) return { awarded: 0, capped: true, reason: 'daily_cap' };
       if (finalAmount > remaining) finalAmount = remaining;
     }
