@@ -51,7 +51,14 @@ Create app user (recommended):
 ```bash
 sudo useradd -m -s /bin/bash minnie
 sudo mkdir -p /opt/minnie
-sudo chown minnie:minnie /opt/minnie
+```
+
+If you deploy over SSH as `nick`, give `nick` ownership of the code and let `minnie` own only runtime dirs:
+
+```bash
+sudo chown -R nick:nick /opt/minnie
+sudo mkdir -p /opt/minnie/data /opt/minnie/logs
+sudo chown -R minnie:minnie /opt/minnie/data /opt/minnie/logs
 ```
 
 ---
@@ -250,14 +257,36 @@ Do **not** expose ports 3000 or 4000 publicly — Nginx proxies to localhost onl
 
 ## 9. Updates & restarts
 
+If you SSH as `nick` but services run as `minnie`, **delete `.next` before each build** (the service user owns it from the last run).
+
+**One-command deploy:**
+
+```bash
+bash /opt/minnie/scripts/deploy.sh
+```
+
+**Manual:**
+
 ```bash
 cd /opt/minnie
-git pull
-npm run install:all
+git -c safe.directory=/opt/minnie pull
+sudo rm -rf /opt/minnie/dashboard/.next
 cd dashboard && npm run build && cd ..
+sudo chown -R minnie:minnie /opt/minnie/dashboard/.next
 npm run deploy-commands   # if essential-commands.js changed
 sudo systemctl restart minnie-bot minnie-dashboard
 ```
+
+**Recommended ownership** (deploy as `nick`, run services as `minnie`):
+
+```bash
+sudo chown -R nick:nick /opt/minnie
+sudo chown -R minnie:minnie /opt/minnie/data /opt/minnie/logs
+# after each dashboard build:
+sudo chown -R minnie:minnie /opt/minnie/dashboard/.next
+```
+
+**`EACCES` on `.next/trace`:** `sudo rm -rf /opt/minnie/dashboard/.next` then rebuild.
 
 ---
 
