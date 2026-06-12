@@ -58,7 +58,7 @@ class XpService {
 
     const coinRate = source === 'voice' ? settings.coin_voice_rate : settings.coin_text_rate;
     const coinMult = config.prestige.enabled
-      ? 1 + user.prestige * ((settings.prestige_coin_multiplier || 1.1) - 1) * 0.1)
+      ? 1 + user.prestige * ((settings.prestige_coin_multiplier || 1.1) - 1) * 0.1
       : 1;
     const coins = Math.floor(finalAmount * coinRate * coinMult);
     if (coins > 0) {
