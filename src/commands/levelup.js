@@ -4,6 +4,13 @@ const LevelService = require('../services/LevelService');
 const { isAdmin } = require('../utils/permissions');
 const { displayName } = require('../utils/usernames');
 
+const REASON_MESSAGES = {
+  no_channel_configured: 'No **level-up channel** set. Add one in the web dashboard → XP Configuration → Announcements.',
+  channel_not_found: 'Level-up channel ID is invalid or the bot cannot see that channel.',
+  missing_permissions: 'Minnie cannot send messages in the level-up channel. Give the bot **View Channel**, **Send Messages**, and **Embed Links** there.',
+  send_failed: 'Failed to post in the level-up channel. Check bot permissions and channel ID.',
+};
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('levelup')
@@ -27,11 +34,24 @@ module.exports = {
       return interaction.reply({ content: 'Could not level up that member.', ephemeral: true });
     }
 
-    await LevelService.handleLevelUp(interaction.guild, member, result.oldLevel, result.newLevel);
+    const announce = await LevelService.processLevelUps(
+      interaction.guild.id,
+      member.id,
+      result.oldLevel,
+      result.newLevel,
+      { guild: interaction.guild, member }
+    );
 
-    await interaction.reply({
-      content: `Promoted **${displayName(member)}** from Level **${result.oldLevel}** → **${result.newLevel}**. Level-up announcement posted if a channel is configured.`,
-      ephemeral: true,
-    });
+    let content = `Promoted **${displayName(member)}** from Level **${result.oldLevel}** → **${result.newLevel}**.`;
+    if (announce.announced > 0) {
+      const last = announce.results?.[announce.results.length - 1];
+      content += ` Announcement posted in **#${last?.channelName || 'channel'}**.`;
+    } else {
+      const reason = announce.results?.[0]?.reason || announce.reason;
+      const hint = REASON_MESSAGES[reason] || 'Level-up announcement was not posted.';
+      content += `\n\n⚠️ ${hint}`;
+    }
+
+    await interaction.reply({ content, ephemeral: true });
   },
 };

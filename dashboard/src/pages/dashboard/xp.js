@@ -8,12 +8,16 @@ export default function XpConfigPage() {
   const [settings, setSettings] = useState(null);
   const [saved, setSaved] = useState(false);
   const [capDisabled, setCapDisabled] = useState(false);
+  const [levelUpChannelId, setLevelUpChannelId] = useState('');
+  const [logChannelId, setLogChannelId] = useState('');
 
   useEffect(() => {
     if (!guildId) return;
     fetchGuild('/settings').then((s) => {
       setSettings(s);
       setCapDisabled(!s.daily_xp_cap || s.daily_xp_cap <= 0);
+      setLevelUpChannelId(s.level_up_channel_id || '');
+      setLogChannelId(s.log_channel_id || '');
     });
   }, [guildId, fetchGuild]);
 
@@ -33,8 +37,8 @@ export default function XpConfigPage() {
         anti_spam_window: parseInt(form.get('anti_spam_window'), 10),
         anti_spam_max_messages: parseInt(form.get('anti_spam_max_messages'), 10),
         max_level: 0,
-        level_up_channel_id: (form.get('level_up_channel_id') || '').trim() || null,
-        log_channel_id: (form.get('log_channel_id') || '').trim() || null,
+        level_up_channel_id: levelUpChannelId.trim() || null,
+        log_channel_id: logChannelId.trim() || null,
       }),
     });
     setSaved(true);
@@ -42,6 +46,8 @@ export default function XpConfigPage() {
     fetchGuild('/settings').then((s) => {
       setSettings(s);
       setCapDisabled(!s.daily_xp_cap || s.daily_xp_cap <= 0);
+      setLevelUpChannelId(s.level_up_channel_id || '');
+      setLogChannelId(s.log_channel_id || '');
     });
   }
 
@@ -86,22 +92,32 @@ export default function XpConfigPage() {
           <p className="text-sm text-gray-400">Levels are unlimited (no max level cap). Prestige is disabled.</p>
 
           <div className="pt-4 border-t border-gray-800 space-y-4">
-            <h3 className="font-semibold">Announcements</h3>
+            <h3 className="font-semibold">Level-up announcements</h3>
             <p className="text-sm text-gray-400">
-              Level-up messages are posted when a member gains a level. Right-click a channel in Discord → Copy Channel ID.
+              Minnie posts a message when someone levels up. Right-click the channel in Discord → Copy Channel ID.
+              The bot needs <strong>View Channel</strong>, <strong>Send Messages</strong>, and <strong>Embed Links</strong> in that channel.
             </p>
-            <Field
-              label="Level-up channel"
-              name="level_up_channel_id"
-              defaultValue={settings.level_up_channel_id || ''}
-              placeholder="Channel ID for level-up messages"
-            />
-            <Field
-              label="Log channel (fallback if level-up channel is empty)"
-              name="log_channel_id"
-              defaultValue={settings.log_channel_id || ''}
-              placeholder="Optional"
-            />
+            <label className="block">
+              <span className="text-sm text-gray-400">Level-up channel ID</span>
+              <input
+                value={levelUpChannelId}
+                onChange={(e) => setLevelUpChannelId(e.target.value)}
+                placeholder="e.g. 123456789012345678"
+                className="mt-1 w-full bg-surface-light rounded px-3 py-2 border border-gray-700"
+              />
+            </label>
+            <label className="block">
+              <span className="text-sm text-gray-400">Log channel ID (fallback, optional)</span>
+              <input
+                value={logChannelId}
+                onChange={(e) => setLogChannelId(e.target.value)}
+                placeholder="Optional"
+                className="mt-1 w-full bg-surface-light rounded px-3 py-2 border border-gray-700"
+              />
+            </label>
+            {levelUpChannelId.trim() && (
+              <p className="text-sm text-green-400">Level-up channel configured.</p>
+            )}
           </div>
 
           <button type="submit" className="bg-discord px-4 py-2 rounded font-medium">Save Settings</button>

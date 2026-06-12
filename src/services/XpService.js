@@ -24,7 +24,7 @@ class XpService {
    * Award XP with daily cap, prestige multiplier, logging.
    * Returns { awarded, capped, leveledUp, oldLevel, newLevel, user }
    */
-  award(userId, guildId, { amount, source, username, voice = 0, text = 0, voiceTime = 0, messages = 0, skipDailyCap = false }) {
+  award(userId, guildId, { amount, source, username, voice = 0, text = 0, voiceTime = 0, messages = 0, skipDailyCap = false, guild = null, member = null }) {
     if (amount <= 0) return { awarded: 0, capped: true };
 
     const settings = GuildSettingsRepository.get(guildId);
@@ -41,7 +41,7 @@ class XpService {
       if (finalAmount > remaining) finalAmount = remaining;
     }
 
-    const oldLevel = user.level;
+    const oldLevel = levelFromTotalXp(user.total_xp);
     const vXp = voice || (source === 'voice' ? finalAmount : 0);
     const tXp = text || (source === 'text' ? finalAmount : 0);
 
@@ -74,11 +74,19 @@ class XpService {
     getQuestService().trackXpEarned(userId, guildId, finalAmount);
     if (voiceTime) getQuestService().trackVoiceMinutes(userId, guildId, Math.floor(voiceTime / 60));
 
-    const leveledUp = user.level > oldLevel;
+    const newLevel = Number(user.level);
+    const leveledUp = newLevel > oldLevel;
 
     if (realtimeEmitter) {
       realtimeEmitter.emit('xp:update', { guildId, userId, amount: finalAmount, source, user });
-      if (leveledUp) realtimeEmitter.emit('level:up', { guildId, userId, oldLevel, newLevel: user.level });
+      if (leveledUp) realtimeEmitter.emit('level:up', { guildId, userId, oldLevel, newLevel });
+    }
+
+    if (leveledUp) {
+      const LevelService = require('./LevelService');
+      LevelService.processLevelUps(guildId, userId, oldLevel, newLevel, { guild, member }).catch((err) => {
+        require('../utils/logger').child('levels').warn(`Level-up announce failed: ${err.message}`);
+      });
     }
 
     return {
@@ -86,7 +94,7 @@ class XpService {
       capped: false,
       leveledUp,
       oldLevel,
-      newLevel: user.level,
+      newLevel,
       user,
       coins,
     };
@@ -121,12 +129,18 @@ class XpService {
 
   adminAdjust(userId, guildId, amount, adminId) {
     const user = UserRepository.getOrCreate(userId, guildId);
+    const oldLevel = Number(user.level);
     const newTotal = Math.max(0, user.total_xp + amount);
     const newLevel = levelFromTotalXp(newTotal);
     UserRepository.update(userId, guildId, { total_xp: newTotal, level: newLevel });
     LogRepository.logAdmin(guildId, adminId, amount > 0 ? 'add_xp' : 'remove_xp', userId, String(amount));
     LogRepository.logXp(userId, guildId, amount, 'admin', `By ${adminId}`);
-    return UserRepository.getOrCreate(userId, guildId);
+    const updated = UserRepository.getOrCreate(userId, guildId);
+    if (newLevel > oldLevel) {
+      const LevelService = require('./LevelService');
+      LevelService.processLevelUps(guildId, userId, oldLevel, newLevel).catch(() => {});
+    }
+    return updated;
   }
 
   resetXp(userId, guildId, adminId) {

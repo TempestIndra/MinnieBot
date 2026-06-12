@@ -4,7 +4,6 @@ const GuildSettingsRepository = require('../repositories/GuildSettingsRepository
 const LogRepository = require('../repositories/LogRepository');
 const VoiceSessionRepository = require('../repositories/VoiceSessionRepository');
 const QuestService = require('./QuestService');
-const LevelService = require('./LevelService');
 const config = require('../config');
 
 /** Active voice states: Map<`${guildId}-${userId}`, VoiceState> */
@@ -96,15 +95,14 @@ class VoiceService {
         username: member.user.username,
         voice: amount,
         voiceTime: 60,
+        guild,
+        member,
       });
 
       if (result.awarded > 0) {
         session.validMinutes += 1;
         QuestService.trackVoiceMinutes(session.userId, session.guildId, 1);
         if (session.hadOthers) QuestService.trackVoiceWithOthers(session.userId, session.guildId);
-      }
-      if (result.leveledUp && member) {
-        LevelService.handleLevelUp(guild, member, result.oldLevel, result.newLevel).catch(() => {});
       }
     }
   }

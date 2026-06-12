@@ -54,6 +54,8 @@ class TextXpService {
       username: message.author.username,
       text: amount,
       messages: 1,
+      guild: message.guild,
+      member: message.member ?? await message.guild.members.fetch(userId).catch(() => null),
     });
 
     if (result.awarded > 0) {
