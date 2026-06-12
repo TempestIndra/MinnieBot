@@ -12,9 +12,16 @@ async function resolveTextChannel(guild, channelId) {
     try {
       channel = await guild.channels.fetch(channelId);
     } catch (err) {
-      logger.warn(`Could not fetch channel ${channelId}: ${err.message}`);
+      const hint = err.message?.includes('does not belong')
+        ? `Channel ${channelId} belongs to a different server — use Copy Channel ID on a channel in **${guild.name}** only`
+        : err.message;
+      logger.warn(`Level-up channel lookup failed (guild ${guild.id}): ${hint}`);
       return null;
     }
+  }
+  if (channel.guildId && channel.guildId !== guild.id) {
+    logger.warn(`Level-up channel ${channelId} belongs to guild ${channel.guildId}, not ${guild.id} (${guild.name})`);
+    return null;
   }
   if (!channel?.isTextBased()) return null;
   if (typeof channel.isSendable === 'function' && !channel.isSendable()) return null;
@@ -106,8 +113,8 @@ class LevelService {
 
     const channel = await resolveTextChannel(guild, channelId);
     if (!channel) {
-      logger.warn(`Level-up channel ${channelId} not found or not sendable in guild ${guild.id}`);
-      return { ok: true, announced: false, reason: 'channel_not_found', channelId, assigned };
+      logger.warn(`Level-up channel ${channelId} not in server "${guild.name}" (${guild.id}) — wrong ID or bot cannot see it`);
+      return { ok: true, announced: false, reason: 'wrong_guild_channel', channelId, assigned };
     }
 
     const me = guild.members.me ?? await guild.members.fetchMe().catch(() => null);

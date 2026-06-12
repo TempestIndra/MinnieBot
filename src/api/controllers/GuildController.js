@@ -12,6 +12,7 @@ const { xpProgressInLevel } = require('../../utils/level');
 const botRegistry = require('../../discord/botRegistry');
 const { enrichLeaderboardRows } = require('../../utils/usernames');
 const DashboardAccessService = require('../../services/DashboardAccessService');
+const { validateGuildTextChannel } = require('../../utils/guildChannel');
 
 class GuildController {
   overview(req, res) {
@@ -26,7 +27,7 @@ class GuildController {
     res.json(GuildConfigService.getSettings(req.guildId));
   }
 
-  updateSettings(req, res) {
+  async updateSettings(req, res) {
     const accessFields = ['dashboard_min_role_id', 'dashboard_allowed_role_ids'];
     const touchesAccess = Object.keys(req.body || {}).some((k) => accessFields.includes(k));
     if (touchesAccess) {
@@ -35,6 +36,17 @@ class GuildController {
         return res.status(403).json({ error: 'Only server administrators can change dashboard access rules' });
       }
     }
+
+    for (const field of ['level_up_channel_id', 'log_channel_id']) {
+      const channelId = req.body?.[field];
+      if (channelId === undefined) continue;
+      if (!channelId) continue;
+      const check = await validateGuildTextChannel(req.guildId, channelId);
+      if (!check.ok) {
+        return res.status(400).json({ error: check.error, field });
+      }
+    }
+
     const updated = GuildConfigService.updateSettings(req.guildId, req.body, req.user.id);
     res.json(updated);
   }

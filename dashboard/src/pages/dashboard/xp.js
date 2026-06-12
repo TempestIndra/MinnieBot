@@ -7,6 +7,7 @@ export default function XpConfigPage() {
   const { guilds, guildId, setGuildId, loading, fetchGuild } = useDashboard();
   const [settings, setSettings] = useState(null);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const [capDisabled, setCapDisabled] = useState(false);
   const [levelUpChannelId, setLevelUpChannelId] = useState('');
   const [logChannelId, setLogChannelId] = useState('');
@@ -23,32 +24,37 @@ export default function XpConfigPage() {
 
   async function save(e) {
     e.preventDefault();
+    setSaveError('');
     const form = new FormData(e.target);
     const capValue = capDisabled ? 0 : parseInt(form.get('daily_xp_cap'), 10);
-    await guildApi(guildId, '/settings', {
-      method: 'PATCH',
-      body: JSON.stringify({
-        voice_xp_rate: parseFloat(form.get('voice_xp_rate')),
-        text_xp_min: parseInt(form.get('text_xp_min'), 10),
-        text_xp_max: parseInt(form.get('text_xp_max'), 10),
-        text_cooldown: parseInt(form.get('text_cooldown'), 10),
-        daily_xp_cap: capValue,
-        min_message_length: parseInt(form.get('min_message_length'), 10),
-        anti_spam_window: parseInt(form.get('anti_spam_window'), 10),
-        anti_spam_max_messages: parseInt(form.get('anti_spam_max_messages'), 10),
-        max_level: 0,
-        level_up_channel_id: levelUpChannelId.trim() || null,
-        log_channel_id: logChannelId.trim() || null,
-      }),
-    });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-    fetchGuild('/settings').then((s) => {
-      setSettings(s);
-      setCapDisabled(!s.daily_xp_cap || s.daily_xp_cap <= 0);
-      setLevelUpChannelId(s.level_up_channel_id || '');
-      setLogChannelId(s.log_channel_id || '');
-    });
+    try {
+      await guildApi(guildId, '/settings', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          voice_xp_rate: parseFloat(form.get('voice_xp_rate')),
+          text_xp_min: parseInt(form.get('text_xp_min'), 10),
+          text_xp_max: parseInt(form.get('text_xp_max'), 10),
+          text_cooldown: parseInt(form.get('text_cooldown'), 10),
+          daily_xp_cap: capValue,
+          min_message_length: parseInt(form.get('min_message_length'), 10),
+          anti_spam_window: parseInt(form.get('anti_spam_window'), 10),
+          anti_spam_max_messages: parseInt(form.get('anti_spam_max_messages'), 10),
+          max_level: 0,
+          level_up_channel_id: levelUpChannelId.trim() || null,
+          log_channel_id: logChannelId.trim() || null,
+        }),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+      fetchGuild('/settings').then((s) => {
+        setSettings(s);
+        setCapDisabled(!s.daily_xp_cap || s.daily_xp_cap <= 0);
+        setLevelUpChannelId(s.level_up_channel_id || '');
+        setLogChannelId(s.log_channel_id || '');
+      });
+    } catch (err) {
+      setSaveError(err.message || 'Failed to save settings');
+    }
   }
 
   if (loading) return <div className="p-8">Loading...</div>;
@@ -94,8 +100,8 @@ export default function XpConfigPage() {
           <div className="pt-4 border-t border-gray-800 space-y-4">
             <h3 className="font-semibold">Level-up announcements</h3>
             <p className="text-sm text-gray-400">
-              Minnie posts a message when someone levels up. Right-click the channel in Discord → Copy Channel ID.
-              The bot needs <strong>View Channel</strong>, <strong>Send Messages</strong>, and <strong>Embed Links</strong> in that channel.
+              Minnie posts a message when someone levels up. You must copy the ID from a channel <strong>in this Discord server</strong> (not another server).
+              Discord → User Settings → Advanced → Developer Mode ON → right-click channel → Copy Channel ID.
             </p>
             <label className="block">
               <span className="text-sm text-gray-400">Level-up channel ID</span>
@@ -122,6 +128,7 @@ export default function XpConfigPage() {
 
           <button type="submit" className="bg-discord px-4 py-2 rounded font-medium">Save Settings</button>
           {saved && <span className="text-green-400 ml-2">Saved!</span>}
+          {saveError && <p className="text-red-400 text-sm mt-2">{saveError}</p>}
         </form>
       )}
     </Layout>
