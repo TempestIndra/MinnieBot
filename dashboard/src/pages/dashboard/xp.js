@@ -33,6 +33,8 @@ export default function XpConfigPage() {
         anti_spam_window: parseInt(form.get('anti_spam_window'), 10),
         anti_spam_max_messages: parseInt(form.get('anti_spam_max_messages'), 10),
         max_level: parseInt(form.get('max_level'), 10),
+        level_up_channel_id: (form.get('level_up_channel_id') || '').trim() || null,
+        log_channel_id: (form.get('log_channel_id') || '').trim() || null,
       }),
     });
     setSaved(true);
@@ -82,6 +84,26 @@ export default function XpConfigPage() {
           <Field label="Anti-Spam Window (sec)" name="anti_spam_window" defaultValue={settings.anti_spam_window} type="number" />
           <Field label="Max Messages in Window" name="anti_spam_max_messages" defaultValue={settings.anti_spam_max_messages} type="number" />
           <Field label="Max Level" name="max_level" defaultValue={settings.max_level} type="number" />
+
+          <div className="pt-4 border-t border-gray-800 space-y-4">
+            <h3 className="font-semibold">Announcements</h3>
+            <p className="text-sm text-gray-400">
+              Level-up messages are posted when a member gains a level. Right-click a channel in Discord → Copy Channel ID.
+            </p>
+            <Field
+              label="Level-up channel"
+              name="level_up_channel_id"
+              defaultValue={settings.level_up_channel_id || ''}
+              placeholder="Channel ID for level-up messages"
+            />
+            <Field
+              label="Log channel (fallback if level-up channel is empty)"
+              name="log_channel_id"
+              defaultValue={settings.log_channel_id || ''}
+              placeholder="Optional"
+            />
+          </div>
+
           <button type="submit" className="bg-discord px-4 py-2 rounded font-medium">Save Settings</button>
           {saved && <span className="text-green-400 ml-2">Saved!</span>}
         </form>
@@ -90,11 +112,11 @@ export default function XpConfigPage() {
   );
 }
 
-function Field({ label, name, defaultValue, type = 'text', step, min }) {
+function Field({ label, name, defaultValue, type = 'text', step, min, placeholder }) {
   return (
     <label className="block">
       <span className="text-sm text-gray-400">{label}</span>
-      <input name={name} type={type} step={step} min={min} defaultValue={defaultValue}
+      <input name={name} type={type} step={step} min={min} defaultValue={defaultValue} placeholder={placeholder}
         className="mt-1 w-full bg-surface-light rounded px-3 py-2 border border-gray-700" />
     </label>
   );

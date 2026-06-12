@@ -1,6 +1,21 @@
+const { EmbedBuilder } = require('discord.js');
 const LevelRoleRepository = require('../repositories/LevelRoleRepository');
 const LogRepository = require('../repositories/LogRepository');
 const GuildSettingsRepository = require('../repositories/GuildSettingsRepository');
+const logger = require('../utils/logger').child('levels');
+
+async function resolveTextChannel(guild, channelId) {
+  if (!channelId) return null;
+  let channel = guild.channels.cache.get(channelId);
+  if (!channel) {
+    try {
+      channel = await guild.channels.fetch(channelId);
+    } catch {
+      return null;
+    }
+  }
+  return channel?.isTextBased() ? channel : null;
+}
 
 class LevelService {
   async handleLevelUp(guild, member, oldLevel, newLevel) {
@@ -17,18 +32,36 @@ class LevelService {
         assigned.push(role.id);
         LogRepository.logAdmin(guild.id, 'system', 'level_role_assigned', member.id, `Level ${lr.level} -> ${role.id}`);
       } catch (err) {
-        require('../utils/logger').child('levels').warn(`Failed to assign role ${role.id}: ${err.message}`);
+        logger.warn(`Failed to assign role ${role.id}: ${err.message}`);
       }
     }
 
     const channelId = settings.level_up_channel_id || settings.log_channel_id;
-    if (channelId) {
-      const channel = guild.channels.cache.get(channelId);
-      if (channel?.isTextBased()) {
-        await channel.send({
-          content: `🎉 Congratulations ${member}! You reached **Level ${newLevel}**!`,
-        }).catch(() => {});
-      }
+    if (!channelId) return assigned;
+
+    const channel = await resolveTextChannel(guild, channelId);
+    if (!channel) {
+      logger.warn(`Level-up channel ${channelId} not found or not text-based in guild ${guild.id}`);
+      return assigned;
+    }
+
+    const embed = new EmbedBuilder()
+      .setColor(0x57f287)
+      .setTitle('Level Up!')
+      .setDescription(`${member} reached **Level ${newLevel}**! 🎉`)
+      .setThumbnail(member.user.displayAvatarURL({ size: 128 }));
+
+    if (assigned.length) {
+      embed.addFields({
+        name: 'Rewards',
+        value: assigned.map((id) => `<@&${id}>`).join(', '),
+      });
+    }
+
+    try {
+      await channel.send({ embeds: [embed] });
+    } catch (err) {
+      logger.warn(`Failed to send level-up message to ${channelId}: ${err.message}`);
     }
 
     return assigned;

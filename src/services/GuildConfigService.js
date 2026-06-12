@@ -38,6 +38,10 @@ class GuildConfigService {
     return this.updateSettings(guildId, { log_channel_id: channelId }, adminId);
   }
 
+  setLevelUpChannel(guildId, channelId, adminId) {
+    return this.updateSettings(guildId, { level_up_channel_id: channelId }, adminId);
+  }
+
   whitelistChannel(guildId, channelId, appliesTo, adminId) {
     ChannelRulesRepository.setChannelRule(guildId, channelId, 'whitelist', appliesTo);
     LogRepository.logAdmin(guildId, adminId, 'whitelist_channel', channelId, appliesTo);
