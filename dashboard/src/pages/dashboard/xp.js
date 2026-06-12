@@ -32,7 +32,7 @@ export default function XpConfigPage() {
         min_message_length: parseInt(form.get('min_message_length'), 10),
         anti_spam_window: parseInt(form.get('anti_spam_window'), 10),
         anti_spam_max_messages: parseInt(form.get('anti_spam_max_messages'), 10),
-        max_level: parseInt(form.get('max_level'), 10),
+        max_level: 0,
         level_up_channel_id: (form.get('level_up_channel_id') || '').trim() || null,
         log_channel_id: (form.get('log_channel_id') || '').trim() || null,
       }),
@@ -83,7 +83,7 @@ export default function XpConfigPage() {
           <Field label="Min Message Length" name="min_message_length" defaultValue={settings.min_message_length} type="number" />
           <Field label="Anti-Spam Window (sec)" name="anti_spam_window" defaultValue={settings.anti_spam_window} type="number" />
           <Field label="Max Messages in Window" name="anti_spam_max_messages" defaultValue={settings.anti_spam_max_messages} type="number" />
-          <Field label="Max Level" name="max_level" defaultValue={settings.max_level} type="number" />
+          <p className="text-sm text-gray-400">Levels are unlimited (no max level cap). Prestige is disabled.</p>
 
           <div className="pt-4 border-t border-gray-800 space-y-4">
             <h3 className="font-semibold">Announcements</h3>

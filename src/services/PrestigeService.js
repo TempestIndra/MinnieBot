@@ -1,9 +1,13 @@
+const config = require('../config');
 const UserRepository = require('../repositories/UserRepository');
 const GuildSettingsRepository = require('../repositories/GuildSettingsRepository');
 const LogRepository = require('../repositories/LogRepository');
 
 class PrestigeService {
   canPrestige(userId, guildId) {
+    if (!config.prestige.enabled) {
+      return { ok: false, reason: 'disabled' };
+    }
     const settings = GuildSettingsRepository.get(guildId);
     const user = UserRepository.getOrCreate(userId, guildId);
     if (user.prestige >= settings.prestige_max) return { ok: false, reason: 'max_prestige' };

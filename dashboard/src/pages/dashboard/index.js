@@ -130,7 +130,7 @@ export default function OverviewPage() {
                   <tr key={u.user_id} className="border-t border-gray-800">
                     <td className="p-3">{i + 1}</td>
                     <td className="p-3">{u.username}</td>
-                    <td className="p-3">{u.level} (P{u.prestige})</td>
+                    <td className="p-3">{u.level}</td>
                     <td className="p-3">{u.total_xp.toLocaleString()}</td>
                   </tr>
                 ))}

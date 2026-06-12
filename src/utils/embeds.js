@@ -2,6 +2,7 @@ const { EmbedBuilder } = require('discord.js');
 const { xpProgressInLevel } = require('./level');
 const { escapeDisplayName } = require('./discordMarkdown');
 const { formatDailyCapProgress } = require('./dailyCap');
+const { formatLevelLabel, formatProfileLevel } = require('./levelDisplay');
 
 function profileEmbed(user, rank, settings) {
   const { current, needed } = xpProgressInLevel(user.total_xp, user.level);
@@ -12,7 +13,7 @@ function profileEmbed(user, rank, settings) {
     .setTitle(`${escapeDisplayName(user.username)}'s Profile`)
     .setDescription(`Rank **#${rank}**`)
     .addFields(
-      { name: 'General', value: `Level **${user.level}** | Prestige **${user.prestige}**\nTotal XP **${user.total_xp.toLocaleString()}**`, inline: false },
+      { name: 'General', value: `${formatProfileLevel(user.level, user.prestige)}\nTotal XP **${user.total_xp.toLocaleString()}**`, inline: false },
       { name: 'Voice', value: `Voice XP **${user.voice_xp.toLocaleString()}**\nVoice Time **${formatVoiceTime(user.voice_time_seconds)}**`, inline: true },
       { name: 'Text', value: `Text XP **${user.text_xp.toLocaleString()}**\nMessages **${user.message_count.toLocaleString()}**`, inline: true },
       { name: 'Progression', value: `Weekly **${user.weekly_xp.toLocaleString()}** | Season **${user.seasonal_xp.toLocaleString()}**\nNext Level **${current}/${needed}** XP\n${dailyLine}`, inline: false },
@@ -25,7 +26,7 @@ function leaderboardEmbed(title, rows, source) {
   const lines = rows.length
     ? rows.map((r, i) => {
         const xp = source === 'voice' ? r.voice_xp : source === 'text' ? r.text_xp : r.total_xp;
-        return `**${i + 1}.** ${escapeDisplayName(r.username)} — Lv.${r.level} P${r.prestige} — **${xp.toLocaleString()}** XP`;
+        return `**${i + 1}.** ${escapeDisplayName(r.username)} — ${formatLevelLabel(r.level, r.prestige)} — **${xp.toLocaleString()}** XP`;
       }).join('\n')
     : 'No data yet.';
 

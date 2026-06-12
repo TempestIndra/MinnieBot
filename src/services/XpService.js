@@ -1,7 +1,8 @@
+const config = require('../config');
 const UserRepository = require('../repositories/UserRepository');
 const GuildSettingsRepository = require('../repositories/GuildSettingsRepository');
 const LogRepository = require('../repositories/LogRepository');
-const { levelFromTotalXp, xpRequiredForLevel } = require('../utils/level');
+const { levelFromTotalXp, totalXpForLevel } = require('../utils/level');
 const { isDailyCapEnabled, dailyCapLimit } = require('../utils/dailyCap');
 
 /** Lazy-load to avoid circular dependency with QuestService / StreakService */
@@ -29,7 +30,9 @@ class XpService {
     const settings = GuildSettingsRepository.get(guildId);
     let user = UserRepository.getOrCreate(userId, guildId, username);
 
-    const prestigeMult = 1 + (user.prestige * ((settings.prestige_xp_multiplier || 1.1) - 1) * 0.1);
+    const prestigeMult = config.prestige.enabled
+      ? 1 + (user.prestige * ((settings.prestige_xp_multiplier || 1.1) - 1) * 0.1)
+      : 1;
     let finalAmount = Math.floor(amount * prestigeMult);
 
     if (!skipDailyCap && isDailyCapEnabled(settings)) {
@@ -54,7 +57,9 @@ class XpService {
     });
 
     const coinRate = source === 'voice' ? settings.coin_voice_rate : settings.coin_text_rate;
-    const coinMult = 1 + user.prestige * ((settings.prestige_coin_multiplier || 1.1) - 1) * 0.1;
+    const coinMult = config.prestige.enabled
+      ? 1 + user.prestige * ((settings.prestige_coin_multiplier || 1.1) - 1) * 0.1)
+      : 1;
     const coins = Math.floor(finalAmount * coinRate * coinMult);
     if (coins > 0) {
       UserRepository.update(userId, guildId, { coins: user.coins + coins });
@@ -85,6 +90,33 @@ class XpService {
       user,
       coins,
     };
+  }
+
+  /**
+   * Admin: bump member exactly one level and trigger level-up flow (roles + channel banner).
+   */
+  adminForceLevelUp(userId, guildId, adminId) {
+    const settings = GuildSettingsRepository.get(guildId);
+    const user = UserRepository.getOrCreate(userId, guildId);
+    const oldLevel = user.level;
+
+    const newLevel = oldLevel + 1;
+    const newTotalXp = totalXpForLevel(newLevel);
+
+    UserRepository.update(userId, guildId, {
+      total_xp: Math.max(user.total_xp, newTotalXp),
+      level: newLevel,
+    });
+
+    LogRepository.logAdmin(guildId, adminId, 'force_level_up', userId, `${oldLevel} -> ${newLevel}`);
+    const updated = UserRepository.getOrCreate(userId, guildId);
+
+    if (realtimeEmitter) {
+      realtimeEmitter.emit('xp:update', { guildId, userId, amount: 0, source: 'admin', user: updated });
+      realtimeEmitter.emit('level:up', { guildId, userId, oldLevel, newLevel });
+    }
+
+    return { ok: true, oldLevel, newLevel, user: updated };
   }
 
   adminAdjust(userId, guildId, amount, adminId) {

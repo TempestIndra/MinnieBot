@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS guild_settings (
   text_cooldown INTEGER NOT NULL DEFAULT 60,
   daily_xp_cap INTEGER NOT NULL DEFAULT 500,
   min_message_length INTEGER NOT NULL DEFAULT 3,
-  max_level INTEGER NOT NULL DEFAULT 100,
+  max_level INTEGER NOT NULL DEFAULT 0,
   prestige_max INTEGER NOT NULL DEFAULT 10,
   log_channel_id TEXT,
   level_up_channel_id TEXT,

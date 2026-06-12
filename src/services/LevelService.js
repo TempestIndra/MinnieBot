@@ -23,6 +23,7 @@ class LevelService {
     const roles = LevelRoleRepository.getEligible(guild.id, newLevel);
     const assigned = [];
 
+    // Only add missing reward roles — never remove roles the member already has.
     for (const lr of roles) {
       const role = guild.roles.cache.get(lr.role_id);
       if (!role) continue;

@@ -38,8 +38,11 @@ module.exports = {
     textCooldown: parseInt(process.env.DEFAULT_TEXT_COOLDOWN || '60', 10),
     dailyXpCap: parseInt(process.env.DEFAULT_DAILY_XP_CAP || '500', 10),
     minMessageLength: parseInt(process.env.DEFAULT_MIN_MESSAGE_LENGTH || '3', 10),
-    maxLevel: parseInt(process.env.DEFAULT_MAX_LEVEL || '100', 10),
+    maxLevel: parseInt(process.env.DEFAULT_MAX_LEVEL || '0', 10),
     prestigeMax: parseInt(process.env.DEFAULT_PRESTIGE_MAX || '10', 10),
+  },
+  prestige: {
+    enabled: env('PRESTIGE_ENABLED') === 'true',
   },
   voice: {
     tickIntervalMs: 60_000,

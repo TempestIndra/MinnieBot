@@ -203,7 +203,7 @@ export default function UsersPage() {
             <h3 className="font-bold text-lg">{selected.user.username}</h3>
             <p className="text-gray-500 text-xs font-mono mt-1">{selected.user.user_id}</p>
             <p className="text-gray-400 text-sm mt-3">
-              Rank #{selected.rank} · Level {selected.user.level} · Prestige {selected.user.prestige}
+              Rank #{selected.rank} · Level {selected.user.level}
             </p>
             <div className="mt-3 space-y-1 text-sm">
               <p>Total XP: <strong>{selected.user.total_xp.toLocaleString()}</strong></p>
