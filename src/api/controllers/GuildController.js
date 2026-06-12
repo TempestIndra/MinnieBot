@@ -239,14 +239,13 @@ class GuildController {
   }
 
   analytics(req, res) {
-    const logs = LogRepository.getXpLogs(req.guildId, 200);
-    const byDay = {};
-    for (const log of logs) {
-      const day = log.created_at?.slice(0, 10) || 'unknown';
-      byDay[day] = (byDay[day] || 0) + log.amount;
-    }
+    const days = Math.min(Math.max(parseInt(req.query.days, 10) || 30, 7), 90);
+    const { xpByDay, xpBySource, period } = LogRepository.getXpAnalytics(req.guildId, days);
     res.json({
-      xpByDay: Object.entries(byDay).map(([date, xp]) => ({ date, xp })),
+      days,
+      xpByDay,
+      xpBySource,
+      period,
       stats: UserRepository.getGuildStats(req.guildId),
     });
   }

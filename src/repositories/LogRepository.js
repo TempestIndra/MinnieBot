@@ -30,6 +30,35 @@ class LogRepository {
     return getDatabase().prepare('SELECT * FROM xp_logs WHERE guild_id=? ORDER BY id DESC LIMIT ?').all(guildId, limit);
   }
 
+  getXpAnalytics(guildId, days = 30) {
+    const window = `-${days} days`;
+    const db = getDatabase();
+
+    const xpByDay = db.prepare(`
+      SELECT date(created_at) AS date, SUM(amount) AS xp
+      FROM xp_logs
+      WHERE guild_id = ? AND date(created_at) >= date('now', ?)
+      GROUP BY date(created_at)
+      ORDER BY date ASC
+    `).all(guildId, window);
+
+    const xpBySource = db.prepare(`
+      SELECT source, SUM(amount) AS xp, COUNT(*) AS events
+      FROM xp_logs
+      WHERE guild_id = ? AND date(created_at) >= date('now', ?)
+      GROUP BY source
+      ORDER BY xp DESC
+    `).all(guildId, window);
+
+    const period = db.prepare(`
+      SELECT COALESCE(SUM(amount), 0) AS total_xp, COUNT(*) AS total_events
+      FROM xp_logs
+      WHERE guild_id = ? AND date(created_at) >= date('now', ?)
+    `).get(guildId, window);
+
+    return { xpByDay, xpBySource, period };
+  }
+
   getCoinLogs(guildId, limit = 50) {
     return getDatabase().prepare('SELECT * FROM coin_logs WHERE guild_id=? ORDER BY id DESC LIMIT ?').all(guildId, limit);
   }
